@@ -1,8 +1,10 @@
+// import 'package:dtrs_survey/core/utils/location_service.dart';
 import 'dart:convert';
 
 import 'package:dtrs_survey/core/constants/colors.dart';
 import 'package:dtrs_survey/features/dashboard/data/models/structure_model.dart';
 import 'package:dtrs_survey/features/survey/data/models/ocr_extract_model.dart';
+import 'package:dtrs_survey/features/survey/presentation/pages/widgets/info_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/survey_bloc.dart';
@@ -12,11 +14,13 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:dtrs_survey/features/survey/presentation/pages/review_survey_screen.dart';
 
 class SurveyPage extends StatelessWidget {
   final Structure structure;
   const SurveyPage({super.key, required this.structure});
 
+  // @override
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -45,70 +49,84 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
   bool isOcrLoading = false;
   OcrData? ocrData;
 
-Future<void> _callOcrApi(File imageFile) async {
-  setState(() => isOcrLoading = true);
+  Future<void> _callOcrApi(File imageFile) async {
+    setState(() => isOcrLoading = true);
 
-  try {
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse("https://tgrpdcl.com/ocr/ocr-extract"),
-    );
-
-    request.fields['dtr_code'] = widget.structure.structurecode;
-
-    request.files.add(
-      await http.MultipartFile.fromPath('image', imageFile.path),
-    );
-
-    var response = await request.send();
-    var resBody = await response.stream.bytesToString();
-    final data = jsonDecode(resBody);
-
-    setState(() => isOcrLoading = false);
-
-    if (data['success'] == true) {
-      //  SUCCESS
-         ocrData = OcrData.fromJson(data['extracted_json']);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("OCR Successful ✔"),
-          backgroundColor: Colors.green,
-        ),
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse("https://tgrpdcl.com/ocr/ocr-extract"),
       );
-    } else {
-      //  FAIL → FORCE RETAKE
+
+      request.fields['dtr_code'] = widget.structure.structurecode;
+
+      request.files.add(
+        await http.MultipartFile.fromPath('image', imageFile.path),
+      );
+
+      var response = await request.send();
+      var resBody = await response.stream.bytesToString();
+      final data = jsonDecode(resBody);
+
+      setState(() => isOcrLoading = false);
+
+      if (data['success'] == true) {
+        //  SUCCESS
+        ocrData = OcrData.fromJson(data['extracted_json']);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("OCR Successful ✔"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        //  FAIL → FORCE RETAKE
+        setState(() {
+          namePlatePhoto = null;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(data['error'] ?? "OCR failed. Try again."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
       setState(() {
+        isOcrLoading = false;
         namePlatePhoto = null;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(data['error'] ?? "OCR failed. Try again."),
+        const SnackBar(
+          content: Text("Something went wrong. Capture again."),
           backgroundColor: Colors.red,
         ),
       );
     }
-  } catch (e) {
-    setState(() {
-      isOcrLoading = false;
-      namePlatePhoto = null;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Something went wrong. Capture again."),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
-}
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   LocationService.startGlobalCapture();
+  // }
+
+  // @override
+  // void dispose() {
+  //   LocationService.stopGlobalCapture();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.cardBackground,
+
       appBar: AppBar(
-        title: const Text("Survey Details"),
-        backgroundColor: Colors.green,
+        title: Text("Survey Details"),
+        backgroundColor: AppColors.backgroundGreen,
       ),
       body: BlocConsumer<SurveyBloc, SurveyState>(
         listener: (context, state) {
@@ -127,10 +145,10 @@ Future<void> _callOcrApi(File imageFile) async {
           }
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             children: [
-              _buildInfoCard(),
-              const SizedBox(height: 20),
+              buildInfoCard(widget.structure),
+              const SizedBox(height: 8),
 
               // Substation Dropdown
               Row(
@@ -270,7 +288,7 @@ Future<void> _callOcrApi(File imageFile) async {
               _buildCameraButton("DTR NAME PLATE ", 3),
               const SizedBox(height: 16),
 
-              _buildMeterSection(),
+              _buildMeterSection(state),
             ],
           );
         },
@@ -298,97 +316,9 @@ Future<void> _callOcrApi(File imageFile) async {
         }
       });
       if (type == 3) {
-      _callOcrApi(file);
+        _callOcrApi(file);
+      }
     }
-    }
-  }
-
-
-  Widget _buildInfoCard() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Wrap(
-          spacing: 10,
-          children: [
-            _rowPair(
-              _infoBox(
-                "Circle",
-                '${widget.structure.circode} - ${widget.structure.cirname}',
-              ),
-              _infoBox(
-                "Division",
-                '${widget.structure.divcd} - ${widget.structure.divname}',
-              ),
-            ),
-            _rowPair(
-              _infoBox(
-                "Sub Division",
-                '${widget.structure.subdivcd} - ${widget.structure.subdivname}',
-              ),
-              _infoBox(
-                "Section",
-                '${widget.structure.uksec} - ${widget.structure.secname}',
-              ),
-            ),
-            _rowPair(
-              _infoBox("Structure Code", widget.structure.structurecode),
-              _infoBox("Structure Name", widget.structure.structname),
-            ),
-            _rowPair(
-              _infoBox("AE Mobile No", widget.structure.aePhno),
-              const SizedBox(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _rowPair(Widget left, Widget right) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Expanded(child: left),
-            const SizedBox(width: 10),
-            Expanded(child: right),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _infoBox(String title, String value) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.green.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Text(
-            title.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            softWrap: true,
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildCameraButton(String title, int type) {
@@ -410,24 +340,26 @@ Future<void> _callOcrApi(File imageFile) async {
         ),
         const SizedBox(height: 8),
         GestureDetector(
-          onTap: isOcrLoading && type == 3
-    ? null
-    : () => _pickImage(type),
+          onTap: isOcrLoading && type == 3 ? null : () => _pickImage(type),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
               color: Colors.grey[200],
               borderRadius: BorderRadius.circular(8),
             ),
             child: isOcrLoading && type == 3
-    ? const Center(child: CircularProgressIndicator())
-    : image == null
+                ? const Center(child: Padding(
+                  padding: EdgeInsets.all(4.0),
+                  child: CircularProgressIndicator(),
+                ))
+                : image == null
                 ? const Column(
+                  
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.camera_alt, size: 30),
-                      SizedBox(height: 6),
+                      Icon(Icons.camera_alt, size: 24),
+                      // SizedBox(height: 6),
                       Text("Tap to capture"),
                     ],
                   )
@@ -457,7 +389,7 @@ Future<void> _callOcrApi(File imageFile) async {
     );
   }
 
-  Widget _buildMeterSection() {
+  Widget _buildMeterSection(SurveyState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -509,20 +441,40 @@ Future<void> _callOcrApi(File imageFile) async {
 
         const SizedBox(height: 20),
 
-        // NEXT BUTTON
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: _isFormValid() ? () {} : null,
+            onPressed: _isFormValid(state)
+                ? () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReviewSurveyScreen(
+                          structure: widget.structure,
+                          selectedSubstation: state.selectedSubstation!,
+                          selectedFeeder: state.selectedFeeder!,
+                          structurePhoto: structurePhoto!,
+                          embossPhoto: embossPhoto!,
+                          namePlatePhoto: namePlatePhoto!,
+                          isMeterAvailable: isMeterAvailable,
+                          meterPhoto: meterPhoto,
+                          ocrData: ocrData,
+                        ),
+                      ),
+                    );
+                  }
+                : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: _isFormValid()
+              backgroundColor: _isFormValid(state)
                   ? Colors.black87
                   : Colors.grey[400],
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Text("NEXT"),
+            child: const Text("NEXT", style: TextStyle(color: Colors.white)),
           ),
         ),
+        const SizedBox(height: 20),
+
       ],
     );
   }
@@ -574,8 +526,13 @@ Future<void> _callOcrApi(File imageFile) async {
     );
   }
 
-  bool _isFormValid() {
-    if (!isMeterAvailable) return true;
-    return meterPhoto != null;
+  bool _isFormValid(SurveyState state) {
+    if (state.selectedSubstation == null) return false;
+    if (state.selectedFeeder == null) return false;
+    if (structurePhoto == null) return false;
+    if (embossPhoto == null) return false;
+    if (namePlatePhoto == null) return false;
+    if (isMeterAvailable && meterPhoto == null) return false;
+    return true;
   }
 }

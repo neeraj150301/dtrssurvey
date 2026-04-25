@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:dtrs_survey/features/survey/presentation/pages/survey_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -66,18 +65,18 @@ class _StructuresListViewState extends State<_StructuresListView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundGreen,
+      backgroundColor: AppColors.cardBackground,
       appBar: AppBar(
         title: Text(
           widget.title,
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        backgroundColor: AppColors.primaryGreen,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.backgroundGreen,
         elevation: 0,
       ),
       body: Column(
         children: [
+          SizedBox(height: 16),
           _buildSearchBar(),
           Expanded(child: _buildBody()),
         ],
@@ -88,7 +87,7 @@ class _StructuresListViewState extends State<_StructuresListView> {
   Widget _buildSearchBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      color: AppColors.primaryGreen,
+      color: AppColors.cardBackground,
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
@@ -121,9 +120,18 @@ class _StructuresListViewState extends State<_StructuresListView> {
             vertical: 0,
             horizontal: 16,
           ),
+
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Colors.green, width: 1),
           ),
         ),
       ),
@@ -170,7 +178,10 @@ class _StructuresListViewState extends State<_StructuresListView> {
           return Stack(
             children: [
               ListView.builder(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 2.0,
+                  horizontal: 12,
+                ),
                 itemCount: loadedState.allStructures.length + 1,
                 itemBuilder: (context, index) {
                   if (index == loadedState!.allStructures.length) {
