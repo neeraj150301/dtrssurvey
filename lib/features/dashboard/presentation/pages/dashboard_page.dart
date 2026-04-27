@@ -1,12 +1,14 @@
 import 'package:dtrs_survey/features/auth/data/models/auth_models.dart';
-import 'package:dtrs_survey/features/dashboard/presentation/bloc/dash_bloc.dart';
-import 'package:dtrs_survey/features/dashboard/presentation/bloc/dash_event.dart';
-import 'package:dtrs_survey/features/dashboard/presentation/bloc/dash_state.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/bloc/dashboard_bloc/dash_bloc.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/bloc/dashboard_bloc/dash_event.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/bloc/dashboard_bloc/dash_state.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/bloc/profile_bloc/profile_bloc.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/bloc/profile_bloc/profile_event.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/widgets/app_header.dart';
-import '../../../auth/presentation/pages/login_page.dart';
 import 'structures_list_page.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -21,6 +23,17 @@ class _DashboardPageState extends State<DashboardPage> {
   int _selectedTabIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+
+    final phone = widget.user.phoneNumber;
+
+    context.read<DashboardBloc>().add(LoadDashboardData(phone: phone));
+
+    context.read<ProfileBloc>().add(LoadProfile(phone));
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.cardBackground,
@@ -29,8 +42,6 @@ class _DashboardPageState extends State<DashboardPage> {
         child: ListView(
           children: [
             const AppHeader(),
-            const SizedBox(height: 10),
-            // _buildNavigationBar(),
             _buildWelcomeSection(context),
             _buildContent(),
           ],
@@ -64,69 +75,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Widget _buildNavigationBar() {
-  //   return Container(
-  //     color: AppColors.primaryGreen,
-  //     padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-  //     child: Row(
-  //       children: [
-  //         _buildTabItem('Dashboard', 0),
-  //         const SizedBox(width: 16),
-  //         _buildTabItem('User Management', 1),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // Widget _buildTabItem(String title, int index) {
-  //   bool isSelected = _selectedTabIndex == index;
-  //   return GestureDetector(
-  //     onTap: () {
-  //       setState(() {
-  //         _selectedTabIndex = index;
-  //       });
-  //     },
-  //     child: Container(
-  //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-  //       decoration: BoxDecoration(
-  //         color: isSelected ? Colors.white : Colors.transparent,
-  //         borderRadius: BorderRadius.circular(6),
-  //       ),
-  //       child: Text(
-  //         title,
-  //         style: TextStyle(
-  //           color: isSelected ? Colors.black : Colors.black87,
-  //           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-  //           fontSize: 14,
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // ------------logout button-----------------------
-  // ElevatedButton.icon(
-  //   onPressed: () {
-  //     Navigator.of(context).pushReplacement(
-  //       MaterialPageRoute(builder: (_) => const LoginPage()),
-  //     );
-  //   },
-  //   style: ElevatedButton.styleFrom(
-  //     backgroundColor: AppColors.buttonDark,
-  //     foregroundColor: Colors.white,
-  //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-  //     shape: RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.circular(6),
-  //     ),
-  //     minimumSize: const Size(0, 32),
-  //   ),
-  //   icon: const Icon(Icons.logout, size: 14, color: Colors.white),
-  //   label: const Text(
-  //     'Logout',
-  //     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-  //   ),
-  // ),
-
   Widget _buildWelcomeSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -147,30 +95,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   color: AppColors.textDark,
                 ),
               ),
-              // ElevatedButton.icon(
-              //   onPressed: () {
-              //     Navigator.of(context).pushReplacement(
-              //       MaterialPageRoute(builder: (_) => const LoginPage()),
-              //     );
-              //   },
-              //   style: ElevatedButton.styleFrom(
-              //     backgroundColor: AppColors.buttonDark,
-              //     foregroundColor: Colors.white,
-              //     padding: const EdgeInsets.symmetric(
-              //       horizontal: 8,
-              //       vertical: 0,
-              //     ),
-              //     shape: RoundedRectangleBorder(
-              //       borderRadius: BorderRadius.circular(6),
-              //     ),
-              //     minimumSize: const Size(0, 32),
-              //   ),
-              //   icon: const Icon(Icons.logout, size: 14, color: Colors.white),
-              //   label: const Text(
-              //     'Logout',
-              //     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              //   ),
-              // ),
             ],
           ),
         ),
@@ -181,7 +105,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildContent() {
     if (_selectedTabIndex == 0) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2),
         child: BlocBuilder<DashboardBloc, DashboardState>(
           builder: (context, state) {
             if (state.isLoading) {
@@ -210,7 +134,9 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     );
                     if (context.mounted) {
-                      context.read<DashboardBloc>().add(LoadDashboardData(phone: widget.user.phoneNumber));
+                      context.read<DashboardBloc>().add(
+                        LoadDashboardData(phone: widget.user.phoneNumber),
+                      );
                     }
                   },
                   child: _buildStatCard(
@@ -231,7 +157,9 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     );
                     if (context.mounted) {
-                      context.read<DashboardBloc>().add(LoadDashboardData(phone: widget.user.phoneNumber));
+                      context.read<DashboardBloc>().add(
+                        LoadDashboardData(phone: widget.user.phoneNumber),
+                      );
                     }
                   },
                   child: _buildStatCard(
@@ -252,7 +180,9 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     );
                     if (context.mounted) {
-                      context.read<DashboardBloc>().add(LoadDashboardData(phone: widget.user.phoneNumber));
+                      context.read<DashboardBloc>().add(
+                        LoadDashboardData(phone: widget.user.phoneNumber),
+                      );
                     }
                   },
                   child: _buildStatCard(
@@ -268,29 +198,7 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
       );
     } else {
-      return Center(
-        child: ElevatedButton.icon(
-          onPressed: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const LoginPage()),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.buttonDark,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-            minimumSize: const Size(0, 32),
-          ),
-          icon: const Icon(Icons.logout, size: 14, color: Colors.white),
-          label: const Text(
-            'Logout',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          ),
-        ),
-      );
+      return ProfilePage();
     }
   }
 

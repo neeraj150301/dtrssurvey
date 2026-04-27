@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dtrs_survey/features/dashboard/presentation/pages/widgets/status_stamp.dart';
 import 'package:dtrs_survey/features/survey/presentation/pages/survey_details_page.dart';
 import 'package:dtrs_survey/features/survey/presentation/pages/survey_page.dart';
 import 'package:flutter/material.dart';
@@ -6,9 +7,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../auth/data/models/auth_models.dart';
 import '../../data/models/structure_model.dart';
-import '../bloc/structures_bloc.dart';
-import '../bloc/structures_event.dart';
-import '../bloc/structures_state.dart';
+import '../bloc/structure_bloc/structures_bloc.dart';
+import '../bloc/structure_bloc/structures_event.dart';
+import '../bloc/structure_bloc/structures_state.dart';
 
 class StructuresListPage extends StatelessWidget {
   final User user;
@@ -375,25 +376,29 @@ class _StructuresListViewState extends State<_StructuresListView> {
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: statusColor),
-                  ),
-                  child: Text(
-                    structure.surveyStatus.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: statusColor,
-                    ),
-                  ),
+                StatusStamp(
+                  statusColor: statusColor,
+                  text: structure.surveyStatus.toUpperCase(),
                 ),
+                // Container(
+                //   padding: const EdgeInsets.symmetric(
+                //     horizontal: 8,
+                //     vertical: 4,
+                //   ),
+                //   decoration: BoxDecoration(
+                //     color: statusColor.withValues(alpha: 0.1),
+                //     borderRadius: BorderRadius.circular(4),
+                //     border: Border.all(color: statusColor),
+                //   ),
+                //   child: Text(
+                //     structure.surveyStatus.toUpperCase(),
+                //     style: TextStyle(
+                //       fontSize: 10,
+                //       fontWeight: FontWeight.bold,
+                //       color: statusColor,
+                //     ),
+                //   ),
+                // ),
               ],
             ),
             const SizedBox(height: 12),
@@ -431,7 +436,8 @@ class _StructuresListViewState extends State<_StructuresListView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => SurveyPage(structure: structure, isRetake: false,),
+                        builder: (_) =>
+                            SurveyPage(structure: structure, isRetake: false),
                       ),
                     );
                   },
@@ -465,8 +471,7 @@ class _StructuresListViewState extends State<_StructuresListView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => SurveyDetailsPage(
-                          structure: structure),
+                        builder: (_) => SurveyDetailsPage(structure: structure),
                       ),
                     );
                   },

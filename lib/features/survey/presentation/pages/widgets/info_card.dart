@@ -32,10 +32,10 @@ Widget buildInfoCard(
         _infoBox("Structure Name", structure.structname),
         _infoBox("Structure Code", structure.structurecode),
       ),
-      _rowPair(
-        _infoBox("AE Mobile No", structure.aePhno),
-       const SizedBox(),
-      ),
+      // _rowPair(
+      //   _infoBox("AE Mobile No", structure.aePhno),
+      //  const SizedBox(),
+      // ),
     ],
   );
 }

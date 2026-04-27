@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../data/models/structure_model.dart';
+import '../../../data/models/structure_model.dart';
 
 abstract class StructuresState extends Equatable {
   const StructuresState();

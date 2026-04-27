@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/storage/secure_storage_helper.dart';
-import '../../data/repositories/dash_repository.dart';
+import '../../../../../core/storage/secure_storage_helper.dart';
+import '../../../data/repositories/dash_repository.dart';
 import 'structures_event.dart';
 import 'structures_state.dart';
 

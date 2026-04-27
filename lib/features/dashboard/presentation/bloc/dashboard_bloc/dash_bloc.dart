@@ -1,7 +1,7 @@
 import 'package:dtrs_survey/core/storage/secure_storage_helper.dart';
 import 'package:dtrs_survey/features/dashboard/data/repositories/dash_repository.dart';
-import 'package:dtrs_survey/features/dashboard/presentation/bloc/dash_event.dart';
-import 'package:dtrs_survey/features/dashboard/presentation/bloc/dash_state.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/bloc/dashboard_bloc/dash_event.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/bloc/dashboard_bloc/dash_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {

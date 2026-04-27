@@ -1,8 +1,5 @@
 import 'package:dtrs_survey/core/utils/location_service.dart';
 import 'package:dtrs_survey/features/auth/presentation/pages/login_footer.dart';
-import 'package:dtrs_survey/features/dashboard/data/repositories/dash_repository.dart';
-import 'package:dtrs_survey/features/dashboard/presentation/bloc/dash_bloc.dart';
-import 'package:dtrs_survey/features/dashboard/presentation/bloc/dash_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -84,17 +81,13 @@ class _LoginFormCardState extends State<_LoginFormCard> {
               const SnackBar(
                 content: Text('Login Successful!'),
                 backgroundColor: AppColors.primaryGreen,
+                duration: Duration(seconds: 2),
               ),
             );
 
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (_) => BlocProvider(
-                  create: (context) =>
-                      DashboardBloc(DashboardRepository())
-                        ..add(LoadDashboardData(phone: state.user.phoneNumber)),
-                  child: DashboardPage(user: state.user),
-                ),
+                builder: (_) => DashboardPage(user: state.user),
               ),
             );
           } else if (state is AuthFailure) {
