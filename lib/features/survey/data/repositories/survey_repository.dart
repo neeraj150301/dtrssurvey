@@ -8,7 +8,7 @@ class SurveyRepository {
   Future<List<Substation>> getSubstations(String sectionCode) async {
     final token = await SecureStorageHelper.getToken();
 
-    final url = Uri.parse('${ApiConstants.baseUrl}/substations/$sectionCode');
+    final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.substationEndpoint}$sectionCode');
     final response = await http.get(
       url,
       headers: {
@@ -29,7 +29,7 @@ class SurveyRepository {
 
   Future<List<Feeder>> getFeeders(String substationCode) async {
     final token = await SecureStorageHelper.getToken();
-    final url = Uri.parse('${ApiConstants.baseUrl}/feeders/$substationCode');
+    final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.feedersEndpoint}$substationCode');
     
     final response = await http.get(
       url,

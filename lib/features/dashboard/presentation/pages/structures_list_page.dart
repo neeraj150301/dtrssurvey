@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dtrs_survey/features/survey/presentation/pages/survey_details_page.dart';
 import 'package:dtrs_survey/features/survey/presentation/pages/survey_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -347,6 +348,8 @@ class _StructuresListViewState extends State<_StructuresListView> {
 
   Widget _buildStructureCard(Structure structure, BuildContext context) {
     final bool isPending = structure.surveyStatus.toLowerCase() == 'pending';
+    final bool isCompleted =
+        structure.surveyStatus.toLowerCase() == 'completed';
     final Color statusColor = isPending ? Colors.orange : Colors.green;
 
     return Card(
@@ -428,7 +431,7 @@ class _StructuresListViewState extends State<_StructuresListView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => SurveyPage(structure: structure),
+                        builder: (_) => SurveyPage(structure: structure, isRetake: false,),
                       ),
                     );
                   },
@@ -439,6 +442,41 @@ class _StructuresListViewState extends State<_StructuresListView> {
                   ),
                   label: const Text(
                     'Start Survey',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.textDark,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+
+            if (isCompleted) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SurveyDetailsPage(
+                          structure: structure),
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.assignment_turned_in,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  label: const Text(
+                    'View Details',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(

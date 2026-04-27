@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:dtrs_survey/core/constants/colors.dart';
+import 'package:dtrs_survey/core/network/api_constants.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class ReviewSurveyScreen extends StatefulWidget {
   final bool isMeterAvailable;
   final File? meterPhoto;
   final OcrData? ocrData;
+  final bool isRetake;
 
   const ReviewSurveyScreen({
     super.key,
@@ -34,6 +36,7 @@ class ReviewSurveyScreen extends StatefulWidget {
     required this.isMeterAvailable,
     this.meterPhoto,
     this.ocrData,
+    required this.isRetake,
   });
 
   @override
@@ -186,7 +189,7 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('https://tgrpdcl.com/api/dtr-survey-with-images'),
+        Uri.parse('${ApiConstants.baseUrl}${ApiConstants.drtsImageEndpoint}'),
       );
 
       request.fields['circode'] = widget.structure.circode;
@@ -194,7 +197,7 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
       request.fields['subdivcd'] = widget.structure.subdivcd;
       request.fields['uksec'] = widget.structure.uksec;
       request.fields['ae_phno'] = widget.structure.aePhno;
-      request.fields['is_retake'] = 'false';
+      request.fields['is_retake'] = widget.isRetake.toString();
       request.fields['original_survey_id'] = '';
       request.fields['sscode'] = widget.selectedSubstation;
       request.fields['ssname'] = widget.structure.ssname;

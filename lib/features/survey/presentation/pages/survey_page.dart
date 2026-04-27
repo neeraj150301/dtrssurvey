@@ -1,6 +1,4 @@
-// import 'package:dtrs_survey/core/utils/location_service.dart';
 import 'dart:convert';
-
 import 'package:dtrs_survey/core/constants/colors.dart';
 import 'package:dtrs_survey/features/dashboard/data/models/structure_model.dart';
 import 'package:dtrs_survey/features/survey/data/models/ocr_extract_model.dart';
@@ -18,22 +16,27 @@ import 'package:dtrs_survey/features/survey/presentation/pages/review_survey_scr
 
 class SurveyPage extends StatelessWidget {
   final Structure structure;
-  const SurveyPage({super.key, required this.structure});
+  final bool isRetake;
+  const SurveyPage({
+    super.key,
+    required this.structure,
+    required this.isRetake,
+  });
 
-  // @override
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
           SurveyBloc()..add(LoadInitialData(structure.uksec, structure.sscode)),
-      child: _SurveyPageView(structure: structure),
+      child: _SurveyPageView(structure: structure, isRetake: isRetake),
     );
   }
 }
 
 class _SurveyPageView extends StatefulWidget {
   final Structure structure;
-  const _SurveyPageView({required this.structure});
+  final bool isRetake;
+  const _SurveyPageView({required this.structure, required this.isRetake});
 
   @override
   State<_SurveyPageView> createState() => _SurveyPageViewState();
@@ -123,7 +126,6 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.cardBackground,
-
       appBar: AppBar(
         title: Text("Survey Details"),
         backgroundColor: AppColors.backgroundGreen,
@@ -349,13 +351,14 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: isOcrLoading && type == 3
-                ? const Center(child: Padding(
-                  padding: EdgeInsets.all(4.0),
-                  child: CircularProgressIndicator(),
-                ))
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
                 : image == null
                 ? const Column(
-                  
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.camera_alt, size: 24),
@@ -459,6 +462,7 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
                           isMeterAvailable: isMeterAvailable,
                           meterPhoto: meterPhoto,
                           ocrData: ocrData,
+                          isRetake: widget.isRetake,
                         ),
                       ),
                     );
@@ -474,7 +478,6 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
           ),
         ),
         const SizedBox(height: 20),
-
       ],
     );
   }

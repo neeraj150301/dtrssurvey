@@ -1,5 +1,6 @@
 import 'package:dtrs_survey/features/auth/data/models/auth_models.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/bloc/dash_bloc.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/bloc/dash_event.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/bloc/dash_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -199,8 +200,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 SizedBox(height: 16),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
+                  onTap: () async {
+                    await Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => StructuresListPage(
                           user: widget.user,
@@ -208,6 +209,9 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                     );
+                    if (context.mounted) {
+                      context.read<DashboardBloc>().add(LoadDashboardData(phone: widget.user.phoneNumber));
+                    }
                   },
                   child: _buildStatCard(
                     title: 'Total DTRs',
@@ -217,8 +221,8 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
+                  onTap: () async {
+                    await Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => StructuresListPage(
                           user: widget.user,
@@ -226,6 +230,9 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                     );
+                    if (context.mounted) {
+                      context.read<DashboardBloc>().add(LoadDashboardData(phone: widget.user.phoneNumber));
+                    }
                   },
                   child: _buildStatCard(
                     title: 'Survey Completed DTRs',
@@ -235,8 +242,8 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
+                  onTap: () async {
+                    await Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => StructuresListPage(
                           user: widget.user,
@@ -244,6 +251,9 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                     );
+                    if (context.mounted) {
+                      context.read<DashboardBloc>().add(LoadDashboardData(phone: widget.user.phoneNumber));
+                    }
                   },
                   child: _buildStatCard(
                     title: 'Survey Pending DTRs',
