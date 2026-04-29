@@ -15,3 +15,5 @@ class UpdatePassword extends ProfileEvent {
     required this.newPassword,
   });
 }
+
+class ClearProfile extends ProfileEvent {}

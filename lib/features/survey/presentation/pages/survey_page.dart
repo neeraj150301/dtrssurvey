@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dtrs_survey/core/constants/colors.dart';
+import 'package:dtrs_survey/core/utils/location_service.dart';
 import 'package:dtrs_survey/features/dashboard/data/models/structure_model.dart';
 import 'package:dtrs_survey/features/survey/data/models/ocr_extract_model.dart';
 import 'package:dtrs_survey/features/survey/presentation/pages/widgets/info_card.dart';
@@ -26,8 +27,14 @@ class SurveyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          SurveyBloc()..add(LoadInitialData(structure.uksec, structure.sscode)),
+      create: (context) => SurveyBloc()
+        ..add(
+          LoadInitialData(
+            structure.uksec,
+            structure.sscode,
+            structure.feedercode,
+          ),
+        ),
       child: _SurveyPageView(structure: structure, isRetake: isRetake),
     );
   }
@@ -76,24 +83,30 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
       if (data['success'] == true) {
         //  SUCCESS
         ocrData = OcrData.fromJson(data['extracted_json']);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("OCR Successful ✔"),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text("OCR Successful ✔"),
+              backgroundColor: Colors.green,
+            ),
+          );
       } else {
-        //  FAIL → FORCE RETAKE
+        //  FAIL -> FORCE RETAKE
         setState(() {
           namePlatePhoto = null;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(data['error'] ?? "OCR failed. Try again."),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(data['error'] ?? "OCR failed. Capture again."),
+              backgroundColor: Colors.red,
+              duration: const Duration(days: 1),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
       }
     } catch (e) {
       setState(() {
@@ -101,26 +114,30 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
         namePlatePhoto = null;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Something went wrong. Capture again."),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text("Something went wrong. Capture again."),
+            backgroundColor: Colors.red,
+            duration: const Duration(days: 1),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
     }
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   LocationService.startGlobalCapture();
-  // }
+  @override
+  void initState() {
+    super.initState();
+    LocationService.startGlobalCapture(context);
+  }
 
-  // @override
-  // void dispose() {
-  //   LocationService.stopGlobalCapture();
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    LocationService.stopGlobalCapture();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -169,23 +186,11 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
                 ],
               ),
               const SizedBox(height: 8),
-              // DropdownButtonFormField<String>(
-              //   initialValue: state.selectedSubstation,
-              //   decoration: _inputDecoration(),
-              //   items: state.substations.map((s) {
-              //     return DropdownMenuItem(
-              //       value: s.sscode,
-              //       child: Text("${s.ssname} - ${s.sscode}"),
-              //     );
-              //   }).toList(),
-              //   onChanged: (value) {
-              //     if (value != null) {
-              //       context.read<SurveyBloc>().add(SubstationChanged(value));
-              //     }
-              //   },
-              // ),
               DropdownSearch<String>(
-                selectedItem: state.selectedSubstation,
+                selectedItem: state.substations
+                    .where((s) => s.sscode == state.selectedSubstation)
+                    .map((s) => "${s.ssname} - ${s.sscode}")
+                    .firstOrNull,
                 items: state.substations
                     .map((s) => "${s.ssname} - ${s.sscode}")
                     .toList(),
@@ -231,25 +236,11 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
                 ],
               ),
               const SizedBox(height: 8),
-              // DropdownButtonFormField<String>(
-              //   initialValue: state.selectedFeeder,
-              //   decoration: _inputDecoration(),
-              //   items: state.feeders.map((f) {
-              //     return DropdownMenuItem(
-              //       value: f.feedercode,
-              //       child: Text("${f.feedername} - ${f.feedercode}"),
-              //     );
-              //   }).toList(),
-              //   onChanged: state.isFeederLoading
-              //       ? null
-              //       : (value) {
-              //           if (value != null) {
-              //             context.read<SurveyBloc>().add(FeederChanged(value));
-              //           }
-              //         },
-              // ),
               DropdownSearch<String>(
-                selectedItem: state.selectedFeeder,
+                selectedItem: state.feeders
+                    .where((f) => f.feedercode == state.selectedFeeder)
+                    .map((f) => "${f.feedername} - ${f.feedercode}")
+                    .firstOrNull,
                 items: state.feeders
                     .map((f) => "${f.feedername} - ${f.feedercode}")
                     .toList(),
@@ -366,9 +357,12 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
                       Text("Tap to capture"),
                     ],
                   )
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(image, fit: BoxFit.cover),
+                : SizedBox(
+                    height: 200,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(image, fit: BoxFit.cover),
+                    ),
                   ),
           ),
         ),

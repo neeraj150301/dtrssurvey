@@ -10,7 +10,7 @@ class AppTheme {
         primary: AppColors.primaryGreen,
         surface: AppColors.cardBackground,
       ),
-      fontFamily: 'Roboto', // Default font as requested
+      fontFamily: 'Roboto',
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.primaryGreen,
         elevation: 0,

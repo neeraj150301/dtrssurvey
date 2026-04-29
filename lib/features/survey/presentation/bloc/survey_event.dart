@@ -10,8 +10,9 @@ abstract class SurveyEvent extends Equatable {
 class LoadInitialData extends SurveyEvent {
   final String sectionCode;
   final String substationCode;
+  final String feederCode;
 
-  const LoadInitialData(this.sectionCode, this.substationCode);
+  const LoadInitialData(this.sectionCode, this.substationCode, this.feederCode);
 
   @override
   List<Object?> get props => [sectionCode, substationCode];

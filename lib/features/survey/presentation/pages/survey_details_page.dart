@@ -138,9 +138,11 @@ class _SurveyDetailsPageState extends State<SurveyDetailsPage> {
             ssname: _details!.ssname ?? "",
             feedercode: _details!.feedercode ?? "",
             feedername: _details!.feedername ?? "",
+            agency: _details!.agency ?? "",
           ),
-          // selectedFeeder: _details!.feedername ?? "",
-          // selectedSubstation:
+          selectedFeeder: _details!.feedercode ?? "",
+          selectedSubstation: _details!.sscode,
+          agriculturalConnection: _details!.agriculturalConnections,
         ),
         const SizedBox(height: 16),
         _buildImagesSection(),
@@ -655,22 +657,6 @@ class _SurveyDetailsPageState extends State<SurveyDetailsPage> {
                       ),
                     ],
                   ),
-                // if (_details!.isRetake == true &&
-                //     _details!.surveyType == 'retake')
-                //   Row(
-                //     children: [
-                //       Icon(Icons.repeat, color: Colors.blueAccent, size: 16),
-                //       const SizedBox(width: 4),
-                //       Text(
-                //         "This is a Retake Survey.",
-                //         style: const TextStyle(
-                //           fontSize: 13,
-                //           fontWeight: FontWeight.w500,
-                //           color: Colors.blueAccent,
-                //         ),
-                //       ),
-                //     ],
-                //   ),
               ],
             ),
           ],

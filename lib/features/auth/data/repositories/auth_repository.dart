@@ -35,4 +35,70 @@ class AuthRepository {
       throw Exception(errorMessage);
     }
   }
+
+  Future<Map<String, dynamic>> sendOtp(String phone) async {
+    final res = await http.post(
+      Uri.parse("${ApiConstants.baseUrl}${ApiConstants.sendOtpEndpoint}"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"phone_number": phone}),
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? "Failed to send OTP");
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyOtp(String phone, String otp) async {
+    final res = await http.post(
+      Uri.parse("${ApiConstants.baseUrl}${ApiConstants.verifyOtpEndpoint}"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"phone_number": phone, "otp": otp}),
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? "Failed to send OTP");
+    }
+  }
+
+    Future<Map<String, dynamic>> resetPassword(String phone, String newPassword, String resetToken) async {
+    final res = await http.post(
+      Uri.parse("${ApiConstants.baseUrl}${ApiConstants.resetPasswordEndpoint}"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"phone_number": phone, "new_password": newPassword, "reset_token": resetToken}),
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['message'] ?? "Failed to send OTP");
+    }
+  }
+
+    Future<String> logout(String token) async {
+    final res = await http.post(
+      Uri.parse("${ApiConstants.baseUrl}${ApiConstants.logoutEndpoint}"),
+      headers: {"Content-Type": "application/json", "Authorization": "Bearer $token",},
+      
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (res.statusCode == 200) {
+      return data['message'];
+    } else {
+      throw Exception(data['message'] ?? "Failed to send OTP");
+    }
+  }
+
+
 }

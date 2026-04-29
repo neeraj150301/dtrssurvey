@@ -5,14 +5,16 @@ Widget buildInfoCard(
   Structure structure, {
   String? selectedSubstation,
   String? selectedFeeder,
+  int? agriculturalConnection,
 }) {
   return Wrap(
     spacing: 6,
     children: [
       _rowPair(
+        _infoBox("Agency", '${structure.agency}'),
         _infoBox("Circle", '${structure.circode} - ${structure.cirname}'),
-        _infoBox("Section", '${structure.uksec} - ${structure.secname}'),
       ),
+
       _rowPair(
         _infoBox("Division", '${structure.divcd} - ${structure.divname}'),
         _infoBox(
@@ -21,21 +23,33 @@ Widget buildInfoCard(
         ),
       ),
       _rowPair(
-        selectedSubstation != null
-            ? _infoBox("SUBSTATION", selectedSubstation)
-            : const SizedBox(),
-        selectedFeeder != null
-            ? _infoBox("FEEDER", selectedFeeder)
-            : const SizedBox(),
-      ),
-      _rowPair(
         _infoBox("Structure Name", structure.structname),
         _infoBox("Structure Code", structure.structurecode),
       ),
-      // _rowPair(
-      //   _infoBox("AE Mobile No", structure.aePhno),
-      //  const SizedBox(),
-      // ),
+      _rowPair(
+        _infoBox("Section", '${structure.uksec} - ${structure.secname}'),
+        _infoBox("AE Employee Code", structure.aePhno.substring(6, 10)),
+      ),
+
+      _rowPair(
+        selectedSubstation != null
+            ? _infoBox("SUBSTATION", selectedSubstation)
+            : const SizedBox.shrink(),
+        selectedFeeder != null
+            ? _infoBox("FEEDER", selectedFeeder)
+            : const SizedBox.shrink(),
+      ),
+
+      _rowPair(
+        _infoBox("AE Name", 'AE ${structure.aePhno}'),
+        _infoBox("AE Mobile No", structure.aePhno),
+      ),
+      _rowPair(
+        agriculturalConnection != null
+            ? _infoBox("Agricultural Connection", '$agriculturalConnection')
+            : SizedBox.shrink(),
+        SizedBox.shrink(),
+      ),
     ],
   );
 }

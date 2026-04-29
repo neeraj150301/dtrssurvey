@@ -388,28 +388,61 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
   Future<void> _getCurrentLocation() async {
     setState(() => _isGettingLocation = true);
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        if (mounted) await LocationService.checkLocationRequirements(context);
-        return;
-      }
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          throw Exception('Location permissions are denied');
-        }
-      }
+      final best = LocationService.getBestPosition();
 
-      if (permission == LocationPermission.deniedForever) {
-        throw Exception('Location permissions are permanently denied');
-      }
+       if (best == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "Location not ready yet. Please wait...",
+        ),
+        backgroundColor: Colors.red,
+      ),
+    );
 
-      Position position = await Geolocator.getCurrentPosition();
-      setState(() {
-        _currentPosition = position;
-      });
+    }
+
+    setState(() {
+      _currentPosition = best;
+    });
+
+
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "Captured with accuracy: ${best?.accuracy.toStringAsFixed(2)} m",
+        ),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+      // bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      // if (!serviceEnabled) {
+      //   if (mounted) await LocationService.checkLocationRequirements(context);
+      //   return;
+      // }
+
+      // LocationPermission permission = await Geolocator.checkPermission();
+      // if (permission == LocationPermission.denied) {
+      //   permission = await Geolocator.requestPermission();
+      //   if (permission == LocationPermission.denied) {
+      //     throw Exception('Location permissions are denied');
+      //   }
+      // }
+
+      // if (permission == LocationPermission.deniedForever) {
+      //   throw Exception('Location permissions are permanently denied');
+      // }
+
+      // Position position = await Geolocator.getCurrentPosition();
+      // setState(() {
+      //   _currentPosition = position;
+      // });
+
+      LocationService.stopGlobalCapture();
+      
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(

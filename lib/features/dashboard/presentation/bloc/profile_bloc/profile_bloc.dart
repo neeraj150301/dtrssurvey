@@ -7,11 +7,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
+  String? _cachedMobile;
+
   Profile? _cache;
 
   ProfileBloc() : super(ProfileState()) {
     on<LoadProfile>(_onLoadProfile);
     on<UpdatePassword>(_onUpdatePassword);
+    on<ClearProfile>((event, emit) {
+      _cache = null;
+      _cachedMobile = null;
+      emit(ProfileState());
+    });
   }
 
   Future<void> _onUpdatePassword(
@@ -60,7 +67,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     Emitter<ProfileState> emit,
   ) async {
     // RETURN CACHE FIRST
-    if (_cache != null) {
+    if (_cache != null && _cachedMobile == event.mobile) {
       emit(state.copyWith(profile: _cache, isCached: true));
       return;
     }
@@ -78,7 +85,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final profile = Profile.fromJson(data);
 
       _cache = profile;
-
+      _cachedMobile = event.mobile;
       emit(state.copyWith(isLoading: false, profile: profile));
     } catch (e) {
       emit(state.copyWith(isLoading: false, error: e.toString()));

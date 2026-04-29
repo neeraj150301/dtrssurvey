@@ -1,10 +1,14 @@
+import 'package:dtrs_survey/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:dtrs_survey/features/auth/presentation/bloc/auth_event.dart';
 import 'package:dtrs_survey/core/constants/colors.dart';
+import 'package:dtrs_survey/features/auth/presentation/bloc/auth_state.dart';
 import 'package:dtrs_survey/features/auth/presentation/pages/login_page.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/bloc/profile_bloc/profile_bloc.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/bloc/profile_bloc/profile_event.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/bloc/profile_bloc/profile_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -90,8 +94,34 @@ class ProfilePage extends StatelessWidget {
                 child: _buildUpdatePassword(context, p.mobile),
               ),
               const SizedBox(height: 16),
-              _buildLogout(context),
 
+              BlocListener<AuthBloc, AuthState>(
+                listener: (context, state) async {
+                  if (state is LogoutSuccess) {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.clear();
+
+                    if (!context.mounted) return;
+
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                      (route) => false,
+                    );
+                  }
+
+                  if (state is LogoutFailure) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(state.error)));
+                  }
+                },
+                child: BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    return _buildLogout(context);
+                  },
+                ),
+              ),
               const SizedBox(height: 16),
             ],
           ),
@@ -256,21 +286,30 @@ void showLogoutDialog(BuildContext context) {
                   Expanded(
                     child: SizedBox(
                       height: 38,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const LoginPage(),
+                      child: BlocBuilder<AuthBloc, AuthState>(
+                        builder: (context, state) {
+                          return ElevatedButton(
+                            onPressed: state is LogoutLoading
+                                ? null
+                                : () async {
+                                    context.read<AuthBloc>().add(LogoutRequested());
+                                                              Navigator.pop(context);
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
                             ),
+                            child: state is LogoutLoading
+                                ? const SizedBox(
+                                    height: 16,
+                                    width: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 1,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text("Logout"),
                           );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                        ),
-                        child: const Text("Logout"),
+                        }
                       ),
                     ),
                   ),

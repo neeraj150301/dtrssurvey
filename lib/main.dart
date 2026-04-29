@@ -1,16 +1,18 @@
+import 'package:dtrs_survey/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:dtrs_survey/features/dashboard/data/repositories/dash_repository.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/bloc/dashboard_bloc/dash_bloc.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/bloc/profile_bloc/profile_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
-import 'features/auth/presentation/pages/login_page.dart';
+import 'features/splash/presentation/pages/splash_screen.dart';
 import 'core/utils/location_service.dart';
 
 void main() {
   runApp(
     MultiBlocProvider(
       providers: [
+        BlocProvider(create: (_) => AuthBloc()),
         BlocProvider(create: (_) => ProfileBloc()),
         BlocProvider(create: (_) => DashboardBloc(DashboardRepository())),
       ],
@@ -46,7 +48,7 @@ class _MyAppState extends State<MyApp> {
       title: 'DTRs Survey',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      home: const LoginPage(),
+      home: const SplashScreen(),
     );
   }
 }

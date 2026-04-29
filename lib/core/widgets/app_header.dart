@@ -10,7 +10,7 @@ class AppHeader extends StatelessWidget {
         Positioned.fill(
           child: Image.asset(
             'assets/login_images/bg_grey.png',
-            fit: BoxFit.fitHeight,
+            fit: BoxFit.cover,
             cacheWidth: MediaQuery.of(context).size.width.toInt(),
           ),
         ),

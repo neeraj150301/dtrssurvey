@@ -1,3 +1,4 @@
+import 'package:dtrs_survey/features/survey/data/models/substation_feeder_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/survey_repository.dart';
 import 'survey_event.dart';
@@ -19,37 +20,77 @@ class SurveyBloc extends Bloc<SurveyEvent, SurveyState> {
     Emitter<SurveyState> emit,
   ) async {
     emit(state.copyWith(isLoading: true));
+
     try {
       final substations = await _repository.getSubstations(event.sectionCode);
 
-      // Load feeders initially if substationCode is provided, otherwise just empty list
-      var feeders = <dynamic>[];
-      if (event.substationCode.isNotEmpty) {
-        emit(state.copyWith(substations: substations, isFeederLoading: true));
-        feeders = await _repository.getFeeders(event.substationCode);
-      }
+      emit(state.copyWith(isLoading: false, substations: substations));
 
-      // Check if the provided substationCode is actually in the list of fetched substations
-      String? selectedSubstation = event.substationCode;
-      if (selectedSubstation.isNotEmpty &&
-          !substations.any((s) => s.sscode == selectedSubstation)) {
-        selectedSubstation = null; // Reset if invalid
+      Substation? matchedSubstation;
+
+      try {
+        matchedSubstation = substations.firstWhere(
+          (s) => s.sscode == event.substationCode,
+        );
+      } catch (_) {
+        matchedSubstation = null;
+      }
+      if (matchedSubstation == null) return;
+      final selectedSubstation = matchedSubstation.sscode;
+      emit(
+        state.copyWith(
+          selectedSubstation: selectedSubstation,
+          isFeederLoading: true,
+        ),
+      );
+      // Feeder? matchedFeeder;
+
+      // String? selectedFeeder;
+
+      List<Feeder> feeders = [];
+
+      try {
+        feeders = (await _repository.getFeeders(
+          selectedSubstation,
+        )).cast<Feeder>();
+
+        // matchedSubstation = substations.firstWhere(
+        //   (s) => s.sscode == event.substationCode,
+        // );
+      } catch (_) {
+        emit(
+          state.copyWith(
+            isFeederLoading: false,
+            error: "Failed to load feeders",
+          ),
+        );
+        return;
+      }
+      String? selectedFeeder;
+      try {
+        final matchedFeeder = feeders.firstWhere(
+          (f) => f.feedercode == event.feederCode,
+        );
+        selectedFeeder = matchedFeeder.feedercode;
+      } catch (_) {
+        // selectedFeeder = null;
       }
 
       emit(
         state.copyWith(
-          isLoading: false,
+          // isLoading: false,
+          // isFeederLoading: false,
+          // substations: substations,
+          feeders: feeders,
           isFeederLoading: false,
-          substations: substations,
-          feeders: feeders.cast(),
-          selectedSubstation: selectedSubstation,
+          selectedFeeder: selectedFeeder,
         ),
       );
     } catch (e) {
       emit(
         state.copyWith(
           isLoading: false,
-          isFeederLoading: false,
+          // isFeederLoading: false,
           error: e.toString(),
         ),
       );

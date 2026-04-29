@@ -3,37 +3,71 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
-  // static final List<Position> _capturedPositions = [];
-  // static bool _isCapturing = false;
-  // static StreamSubscription<Position>? _positionStreamSubscription;
+  static final List<Position> _capturedPositions = [];
   static bool _isDialogShowing = false;
 
+static Position? _bestPosition;
+static Position? _startPosition;
+static Timer? _timer;
+
   /// Starts background capture of location points.
-  /// Should be called when the survey starts.
-  // static void startGlobalCapture() {
-  //   _capturedPositions.clear();
-  //   _isCapturing = true;
-  //   _positionStreamSubscription = Geolocator.getPositionStream(
-  //     locationSettings: const LocationSettings(
-  //       accuracy: LocationAccuracy.high,
-  //       distanceFilter: 0,
-  //     ),
-  //   ).listen((Position position) {
-  //     if (_isCapturing) {
-  //       _capturedPositions.add(position);
-  //       print("Global Capture: Received reading with accuracy: ${position.accuracy}");
-  //     }
-  //   });
-  // }
+  static void startGlobalCapture(BuildContext context) async  {
+    _capturedPositions.clear();
+      _bestPosition = null;
+
+
+  _startPosition = await Geolocator.getCurrentPosition();
+  _timer?.cancel();
+  _timer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+    try {
+      Position position = await Geolocator.getCurrentPosition();
+      _capturedPositions.add(position);
+if (_bestPosition == null ||
+          position.accuracy < _bestPosition!.accuracy) {
+        _bestPosition = position;
+      }
+            // print("New accuracy: ${position.accuracy}");
+final distance = Geolocator.distanceBetween(
+        _startPosition!.latitude,
+        _startPosition!.longitude,
+        position.latitude,
+        position.longitude,
+      );
+
+      if (distance > 100) {
+        _showOutOfRangeDialog(context);
+      }
+
+    // _isCapturing = true;
+    // _positionStreamSubscription = Geolocator.getPositionStream(
+    //   locationSettings: const LocationSettings(
+    //     accuracy: LocationAccuracy.high,
+    //     distanceFilter: 0,
+    //   ),
+    // ).listen((Position position) {
+    //   if (_isCapturing) {
+    //     _capturedPositions.add(position);
+    //     print("Global Capture: Received reading with accuracy: ${position.accuracy}");
+    //   }
+    // });
+     } catch (e) {
+      // print("Location error: $e");
+    }
+  });
+
+  }
 
   /// Stops global capture.
-  // static void stopGlobalCapture() {
-  //   _isCapturing = false;
-  //   _positionStreamSubscription?.cancel();
-  //   _positionStreamSubscription = null;
-  // }
+  static void stopGlobalCapture() {
+  _timer?.cancel();
+  _timer = null;
+  }
+  static Position? getBestPosition() {
+  return _bestPosition;
+}
 
-  // static List<Position> get capturedPositions => _capturedPositions;
+
+  static List<Position> get capturedPositions => _capturedPositions;
 
   /// Checks for both service enabled and permissions.
   static Future<void> checkLocationRequirements(BuildContext context) async {
@@ -116,43 +150,6 @@ class LocationService {
     }
   }
 
-  /// Gets the best location from the historical buffer and a fresh 10s capture.
-  // static Future<Position?> getBestLocation(
-  //   void Function(String message) onProgress,
-  // ) async {
-  //   List<Position> positions = List.from(_capturedPositions);
-  //   bool isDone = false;
-
-  //   onProgress("Refining location (10s pulse)...");
-
-  //   // Start a 10 second timer for a final high-accuracy pulse
-  //   Timer(const Duration(seconds: 10), () {
-  //     isDone = true;
-  //   });
-
-  //   while (!isDone) {
-  //     try {
-  //       Position position = await Geolocator.getCurrentPosition(
-  //         locationSettings: const LocationSettings(
-  //           accuracy: LocationAccuracy.high,
-  //           timeLimit: Duration(seconds: 5),
-  //         ),
-  //       );
-  //       positions.add(position);
-  //       onProgress("Optimizing... (${positions.length} total samples)");
-  //     } catch (e) {
-  //       // Silently continue if a single request fails
-  //     }
-  //     await Future.delayed(const Duration(milliseconds: 500));
-  //   }
-
-  //   if (positions.isEmpty) return null;
-
-  //   // Return the position with the best accuracy (lowest accuracy value)
-  //   positions.sort((a, b) => a.accuracy.compareTo(b.accuracy));
-  //   return positions.first;
-  // }
-
   /// Monitors the device's location service status and prompts if disabled.
   static void monitorLocationService(BuildContext context) {
     Geolocator.getServiceStatusStream().listen((ServiceStatus status) {
@@ -163,4 +160,40 @@ class LocationService {
       }
     });
   }
+  static bool _isOutDialogShowing = false;
+
+static void _showOutOfRangeDialog(BuildContext context) {
+  if (_isOutDialogShowing) return;
+
+  _isOutDialogShowing = true;
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) {
+      return PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: const Text(
+            "Out of Range",
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            "You have moved more than 100 meters.\nPlease return to the starting location to continue.",
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _isOutDialogShowing = false;
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 }

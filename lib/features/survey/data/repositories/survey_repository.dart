@@ -45,7 +45,8 @@ class SurveyRepository {
           .map((e) => Feeder.fromJson(e))
           .toList();
     } else {
-      throw Exception('Failed to load feeders');
+      return [];
+      // throw Exception('Failed to load feeders');
     }
   }
 }

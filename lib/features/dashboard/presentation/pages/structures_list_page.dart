@@ -380,36 +380,18 @@ class _StructuresListViewState extends State<_StructuresListView> {
                   statusColor: statusColor,
                   text: structure.surveyStatus.toUpperCase(),
                 ),
-                // Container(
-                //   padding: const EdgeInsets.symmetric(
-                //     horizontal: 8,
-                //     vertical: 4,
-                //   ),
-                //   decoration: BoxDecoration(
-                //     color: statusColor.withValues(alpha: 0.1),
-                //     borderRadius: BorderRadius.circular(4),
-                //     border: Border.all(color: statusColor),
-                //   ),
-                //   child: Text(
-                //     structure.surveyStatus.toUpperCase(),
-                //     style: TextStyle(
-                //       fontSize: 10,
-                //       fontWeight: FontWeight.bold,
-                //       color: statusColor,
-                //     ),
-                //   ),
-                // ),
               ],
             ),
             const SizedBox(height: 12),
-            _buildInfoRow(
-              Icons.qr_code,
-              'Structure Code',
-              structure.structurecode,
-            ),
-            const SizedBox(height: 10),
             Row(
               children: [
+                Expanded(
+                  child: _buildInfoRow(
+                    Icons.qr_code,
+                    'Structure Code',
+                    structure.structurecode,
+                  ),
+                ),
                 Expanded(
                   child: _buildInfoRow(
                     Icons.electrical_services,
@@ -417,11 +399,24 @@ class _StructuresListViewState extends State<_StructuresListView> {
                     structure.equipment ?? 'N/A',
                   ),
                 ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+            Row(
+              children: [
                 Expanded(
                   child: _buildInfoRow(
                     Icons.numbers,
                     'Serial',
                     structure.serialnumber ?? 'N/A',
+                  ),
+                ),
+                Expanded(
+                  child: _buildInfoRow(
+                    Icons.assignment,
+                    'Agency',
+                    structure.agency ?? 'N/A',
                   ),
                 ),
               ],
