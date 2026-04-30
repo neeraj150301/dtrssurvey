@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:dtrs_survey/core/constants/colors.dart';
 import 'package:dtrs_survey/core/network/api_constants.dart';
+import 'package:dtrs_survey/features/survey/presentation/pages/widgets/full_screen_image.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -166,7 +167,11 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
     };
   }
 
-  void _showPreviewDialog() {
+  void _showPreviewDialog(
+    Structure structure,
+    String selectedFeeder,
+    String selectedSubstation,
+  ) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -174,6 +179,9 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
         return _PreviewDialog(
           data: _getFormData(),
           onSubmit: _submitSurveyData,
+          structure: widget.structure,
+          selectedFeeder: selectedFeeder,
+          selectedSubstation: selectedSubstation,
         );
       },
     );
@@ -388,35 +396,29 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
   Future<void> _getCurrentLocation() async {
     setState(() => _isGettingLocation = true);
     try {
-
       final best = LocationService.getBestPosition();
 
-       if (best == null) {
+      if (best == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          "Location not ready yet. Please wait...",
+          SnackBar(
+            content: Text("Location not ready yet. Please wait..."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+
+      setState(() {
+        _currentPosition = best;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Captured with accuracy: ${best?.accuracy.toStringAsFixed(2)} m",
+          ),
+          backgroundColor: Colors.green,
         ),
-        backgroundColor: Colors.red,
-      ),
-    );
-
-    }
-
-    setState(() {
-      _currentPosition = best;
-    });
-
-
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          "Captured with accuracy: ${best?.accuracy.toStringAsFixed(2)} m",
-        ),
-        backgroundColor: Colors.green,
-      ),
-    );
+      );
 
       // bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       // if (!serviceEnabled) {
@@ -442,7 +444,6 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
       // });
 
       LocationService.stopGlobalCapture();
-      
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -570,12 +571,23 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
             return Column(
               children: [
                 Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      images[index],
-                      fit: BoxFit.cover,
-                      width: double.infinity,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              FullScreenImagePage(imageFile: images[index]),
+                        ),
+                      );
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        images[index],
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      ),
                     ),
                   ),
                 ),
@@ -890,6 +902,29 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
                           ),
                         ],
                       ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "ACCURACY:",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            "${_currentPosition!.accuracy.toStringAsFixed(2)} m",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -938,7 +973,13 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _showPreviewDialog,
+                    onPressed: () {
+                      _showPreviewDialog(
+                        widget.structure,
+                        widget.selectedFeeder,
+                        widget.selectedSubstation,
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4CAF50),
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1021,8 +1062,16 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
 class _PreviewDialog extends StatefulWidget {
   final Map<String, String> data;
   final VoidCallback onSubmit;
-
-  const _PreviewDialog({required this.data, required this.onSubmit});
+  final Structure structure;
+  final String selectedFeeder;
+  final String selectedSubstation;
+  const _PreviewDialog({
+    required this.data,
+    required this.onSubmit,
+    required this.structure,
+    required this.selectedFeeder,
+    required this.selectedSubstation,
+  });
 
   @override
   State<_PreviewDialog> createState() => _PreviewDialogState();
@@ -1094,6 +1143,12 @@ class _PreviewDialogState extends State<_PreviewDialog> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   const SizedBox(height: 12),
+                  buildInfoCard(
+                    widget.structure,
+                    selectedFeeder: widget.selectedFeeder,
+                    selectedSubstation: widget.selectedSubstation,
+                  ),
+
                   Container(
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey.shade300),
@@ -1183,30 +1238,7 @@ class _PreviewDialogState extends State<_PreviewDialog> {
                   // Buttons
                   Column(
                     children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(color: Colors.grey.shade300),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            backgroundColor: Colors.grey.shade50,
-                          ),
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
                       if (_isDeclared) ...[
-                        const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -1231,7 +1263,31 @@ class _PreviewDialogState extends State<_PreviewDialog> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 12),
                       ],
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(color: Colors.grey.shade300),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            backgroundColor: Colors.grey.shade50,
+                          ),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],

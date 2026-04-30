@@ -3,6 +3,7 @@ import 'package:dtrs_survey/core/network/api_constants.dart';
 import 'package:dtrs_survey/core/utils/format_service.dart';
 import 'package:dtrs_survey/features/dashboard/data/models/structure_model.dart';
 import 'package:dtrs_survey/features/survey/presentation/pages/survey_page.dart';
+import 'package:dtrs_survey/features/survey/presentation/pages/widgets/full_screen_image.dart';
 import 'package:dtrs_survey/features/survey/presentation/pages/widgets/info_card.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -321,28 +322,41 @@ class _SurveyDetailsPageState extends State<SurveyDetailsPage> {
 
   Widget _buildImageCard(String? urlPath) {
     String fullUrl = _getFullUrl(urlPath);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        height: 120,
-        width: double.infinity,
-        color: Colors.black12,
-        child: fullUrl.isNotEmpty
-            ? CachedNetworkImage(
-                imageUrl: fullUrl,
-                fit: BoxFit.cover,
-                errorWidget: (context, url, error) => const Center(
-                  child: Icon(Icons.broken_image, color: Colors.grey),
-                ),
-                placeholder: (context, url) =>
-                    const Center(child: CircularProgressIndicator()),
-              )
-            : const Center(
-                child: Text(
-                  "No Image",
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                ),
+    return GestureDetector(
+      onTap: fullUrl.isNotEmpty
+        ? () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FullScreenImagePage(imageUrl: fullUrl),
               ),
+            );
+          }
+        : null,
+        
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          height: 120,
+          width: double.infinity,
+          color: Colors.black12,
+          child: fullUrl.isNotEmpty
+              ? CachedNetworkImage(
+                  imageUrl: fullUrl,
+                  fit: BoxFit.cover,
+                  errorWidget: (context, url, error) => const Center(
+                    child: Icon(Icons.broken_image, color: Colors.grey),
+                  ),
+                  placeholder: (context, url) =>
+                      const Center(child: CircularProgressIndicator()),
+                )
+              : const Center(
+                  child: Text(
+                    "No Image",
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ),
+        ),
       ),
     );
   }

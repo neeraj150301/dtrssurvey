@@ -53,7 +53,7 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
   File? structurePhoto;
   File? embossPhoto;
   File? namePlatePhoto;
-  bool isMeterAvailable = true;
+  bool isMeterAvailable = false;
   File? meterPhoto;
   final ImagePicker _picker = ImagePicker();
   bool isOcrLoading = false;
@@ -361,7 +361,7 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
                     height: 200,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.file(image, fit: BoxFit.cover),
+                      child: Image.file(image, fit: BoxFit.fill),
                     ),
                   ),
           ),

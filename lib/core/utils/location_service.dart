@@ -6,66 +6,51 @@ class LocationService {
   static final List<Position> _capturedPositions = [];
   static bool _isDialogShowing = false;
 
-static Position? _bestPosition;
-static Position? _startPosition;
-static Timer? _timer;
+  static Position? _bestPosition;
+  static Position? _startPosition;
+  static Timer? _timer;
 
   /// Starts background capture of location points.
-  static void startGlobalCapture(BuildContext context) async  {
+  static void startGlobalCapture(BuildContext context) async {
     _capturedPositions.clear();
-      _bestPosition = null;
+    _bestPosition = null;
 
+    _startPosition = await Geolocator.getCurrentPosition();
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+      try {
+        Position position = await Geolocator.getCurrentPosition();
+        _capturedPositions.add(position);
+        if (_bestPosition == null ||
+            position.accuracy < _bestPosition!.accuracy) {
+          _bestPosition = position;
+        }
+        // print("New accuracy: ${position.accuracy}");
+        final distance = Geolocator.distanceBetween(
+          _startPosition!.latitude,
+          _startPosition!.longitude,
+          position.latitude,
+          position.longitude,
+        );
 
-  _startPosition = await Geolocator.getCurrentPosition();
-  _timer?.cancel();
-  _timer = Timer.periodic(const Duration(seconds: 10), (timer) async {
-    try {
-      Position position = await Geolocator.getCurrentPosition();
-      _capturedPositions.add(position);
-if (_bestPosition == null ||
-          position.accuracy < _bestPosition!.accuracy) {
-        _bestPosition = position;
+        if (distance > 100) {
+          _showOutOfRangeDialog(context);
+        }
+      } catch (e) {
+        // print("Location error: $e");
       }
-            // print("New accuracy: ${position.accuracy}");
-final distance = Geolocator.distanceBetween(
-        _startPosition!.latitude,
-        _startPosition!.longitude,
-        position.latitude,
-        position.longitude,
-      );
-
-      if (distance > 100) {
-        _showOutOfRangeDialog(context);
-      }
-
-    // _isCapturing = true;
-    // _positionStreamSubscription = Geolocator.getPositionStream(
-    //   locationSettings: const LocationSettings(
-    //     accuracy: LocationAccuracy.high,
-    //     distanceFilter: 0,
-    //   ),
-    // ).listen((Position position) {
-    //   if (_isCapturing) {
-    //     _capturedPositions.add(position);
-    //     print("Global Capture: Received reading with accuracy: ${position.accuracy}");
-    //   }
-    // });
-     } catch (e) {
-      // print("Location error: $e");
-    }
-  });
-
+    });
   }
 
   /// Stops global capture.
   static void stopGlobalCapture() {
-  _timer?.cancel();
-  _timer = null;
+    _timer?.cancel();
+    _timer = null;
   }
-  static Position? getBestPosition() {
-  return _bestPosition;
-}
 
+  static Position? getBestPosition() {
+    return _bestPosition;
+  }
 
   static List<Position> get capturedPositions => _capturedPositions;
 
@@ -160,40 +145,40 @@ final distance = Geolocator.distanceBetween(
       }
     });
   }
+
   static bool _isOutDialogShowing = false;
 
-static void _showOutOfRangeDialog(BuildContext context) {
-  if (_isOutDialogShowing) return;
+  static void _showOutOfRangeDialog(BuildContext context) {
+    if (_isOutDialogShowing) return;
 
-  _isOutDialogShowing = true;
+    _isOutDialogShowing = true;
 
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) {
-      return PopScope(
-        canPop: false,
-        child: AlertDialog(
-          title: const Text(
-            "Out of Range",
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-          ),
-          content: const Text(
-            "You have moved more than 100 meters.\nPlease return to the starting location to continue.",
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _isOutDialogShowing = false;
-              },
-              child: const Text("OK"),
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return PopScope(
+          canPop: false,
+          child: AlertDialog(
+            title: const Text(
+              "Out of Range",
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
+            content: const Text(
+              "You have moved more than 100 meters.\nPlease return to the starting location to continue.",
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _isOutDialogShowing = false;
+                },
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
