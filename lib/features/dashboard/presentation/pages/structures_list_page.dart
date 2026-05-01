@@ -94,6 +94,7 @@ class _StructuresListViewState extends State<_StructuresListView> {
         controller: _searchController,
         decoration: InputDecoration(
           hintText: 'Search by Structure Code, Equipment Id, Serial...',
+          hintStyle: TextStyle(fontSize: 12),
           fillColor: Colors.white,
           filled: true,
           // CLEAR BUTTON

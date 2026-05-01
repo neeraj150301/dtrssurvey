@@ -361,7 +361,7 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
                     height: 200,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.file(image, fit: BoxFit.fill),
+                      child: Image.file(image, fit: BoxFit.contain),
                     ),
                   ),
           ),
@@ -448,8 +448,22 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
                       MaterialPageRoute(
                         builder: (context) => ReviewSurveyScreen(
                           structure: widget.structure,
+
                           selectedSubstation: state.selectedSubstation!,
                           selectedFeeder: state.selectedFeeder!,
+                          selectedSubstationDisplay: state.substations
+                              .where(
+                                (s) => s.sscode == state.selectedSubstation,
+                              )
+                              .map((s) => "${s.ssname} - ${s.sscode}")
+                              .firstOrNull,
+
+                          selectedFeederDisplay: state.feeders
+                              .where(
+                                (f) => f.feedercode == state.selectedFeeder,
+                              )
+                              .map((f) => "${f.feedername} - ${f.feedercode}")
+                              .firstOrNull,
                           structurePhoto: structurePhoto!,
                           embossPhoto: embossPhoto!,
                           namePlatePhoto: namePlatePhoto!,

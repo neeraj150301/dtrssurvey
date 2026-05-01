@@ -18,6 +18,8 @@ class ReviewSurveyScreen extends StatefulWidget {
   final Structure structure;
   final String selectedSubstation;
   final String selectedFeeder;
+  final String? selectedSubstationDisplay;
+  final String? selectedFeederDisplay;
   final File structurePhoto;
   final File embossPhoto;
   final File namePlatePhoto;
@@ -30,6 +32,8 @@ class ReviewSurveyScreen extends StatefulWidget {
     super.key,
     required this.structure,
     required this.selectedSubstation,
+    this.selectedSubstationDisplay,
+    this.selectedFeederDisplay,
     required this.selectedFeeder,
     required this.structurePhoto,
     required this.embossPhoto,
@@ -949,8 +953,11 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
         children: [
           buildInfoCard(
             widget.structure,
-            selectedFeeder: widget.selectedFeeder,
-            selectedSubstation: widget.selectedSubstation,
+
+            selectedFeeder:
+                widget.selectedFeederDisplay ?? widget.selectedFeeder,
+            selectedSubstation:
+                widget.selectedSubstationDisplay ?? widget.selectedSubstation,
           ),
           const SizedBox(height: 16),
           _buildImageGrid(),
