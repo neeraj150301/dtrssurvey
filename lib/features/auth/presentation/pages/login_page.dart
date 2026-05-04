@@ -51,7 +51,7 @@ class _LoginFormCard extends StatefulWidget {
 }
 
 class _LoginFormCardState extends State<_LoginFormCard> {
-  final _identifierController = TextEditingController(text: "8712471189");
+  final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
   final _forgotMobileController = TextEditingController();
   final _otpController = TextEditingController();
