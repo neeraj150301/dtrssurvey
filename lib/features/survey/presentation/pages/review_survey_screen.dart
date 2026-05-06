@@ -60,7 +60,7 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
   late TextEditingController _manufactureDateController;
   late TextEditingController _orderNoController;
   late TextEditingController _agriConnectionsController;
-
+  String? _selectedTransformerType;
   late Listenable _formListenable;
 
   Position? _currentPosition;
@@ -92,8 +92,16 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
     _capacityController = TextEditingController(
       text: widget.ocrData?.capacity ?? '',
     );
+    // _transformerTypeController = TextEditingController(
+    //   text: widget.ocrData?.transformeryType ?? '',
+    // );
+    _selectedTransformerType =
+        widget.ocrData?.transformeryType.toLowerCase() == "copper"
+        ? "COPPER"
+        : "ALUMINIUM";
+
     _transformerTypeController = TextEditingController(
-      text: widget.ocrData?.transformeryType ?? '',
+      text: _selectedTransformerType,
     );
     _manufacturerController = TextEditingController(
       text: widget.ocrData?.manufacturer ?? '',
@@ -466,12 +474,17 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
     return val;
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hint, {
+    bool readOnly = false,
+  }) {
     final isNumberField = hint.toLowerCase().contains(
       "enter no. of agri connections",
     );
     return TextField(
       controller: controller,
+      readOnly: readOnly,
       keyboardType: isNumberField ? TextInputType.number : TextInputType.text,
       inputFormatters: isNumberField
           ? [FilteringTextInputFormatter.digitsOnly]
@@ -483,9 +496,32 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         isDense: true,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
-        fillColor: Colors.white,
+        fillColor: readOnly ? Colors.grey.shade200 : Colors.white,
         filled: true,
       ),
+    );
+  }
+
+  Widget _buildTransformerDropdown() {
+    return DropdownButtonFormField<String>(
+      initialValue: _selectedTransformerType,
+      decoration: InputDecoration(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        isDense: true,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+      ),
+      items: const [
+        DropdownMenuItem(value: "ALUMINIUM", child: Text("Aluminium")),
+        DropdownMenuItem(value: "COPPER", child: Text("Copper")),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _selectedTransformerType = value;
+          _transformerTypeController.text = value ?? '';
+        });
+      },
     );
   }
 
@@ -659,6 +695,7 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
                   _buildTextField(
                     _structureCodeController,
                     "Enter Structure Code",
+                    readOnly: true,
                   ),
                 ),
                 _buildTableRow(
@@ -667,6 +704,7 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
                   _buildTextField(
                     _structureNameController,
                     "Enter Structure Name",
+                    readOnly: true,
                   ),
                 ),
                 _buildTableRow(
@@ -696,10 +734,11 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
                 _buildTableRow(
                   "Transformer Type",
                   _displayParam(widget.ocrData?.transformeryType),
-                  _buildTextField(
-                    _transformerTypeController,
-                    "Enter Transformer Type",
-                  ),
+                  // _buildTextField(
+                  //   _transformerTypeController,
+                  //   "Enter Transformer Type",
+                  // ),
+                  _buildTransformerDropdown(),
                   required: true,
                 ),
                 _buildTableRow(
