@@ -65,7 +65,7 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse("https://tgrpdcl.com/ocr/ocr-extract"),
+        Uri.parse("https://dtrssurvey.tgrpdcl.com/ocr/ocr-extract"),
       );
 
       request.fields['dtr_code'] = widget.structure.structurecode;

@@ -75,7 +75,6 @@ class ProfilePage extends StatelessWidget {
               BlocListener<ProfileBloc, ProfileState>(
                 listener: (context, state) {
                   if (state.isUpdateSuccess) {
-                    Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text("Password updated successfully"),
@@ -292,8 +291,10 @@ void showLogoutDialog(BuildContext context) {
                             onPressed: state is LogoutLoading
                                 ? null
                                 : () async {
-                                    context.read<AuthBloc>().add(LogoutRequested());
-                                                              Navigator.pop(context);
+                                    context.read<AuthBloc>().add(
+                                      LogoutRequested(),
+                                    );
+                                    Navigator.pop(context);
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
@@ -309,7 +310,7 @@ void showLogoutDialog(BuildContext context) {
                                   )
                                 : const Text("Logout"),
                           );
-                        }
+                        },
                       ),
                     ),
                   ),

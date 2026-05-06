@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'https://tgrpdcl.com/api';
+  static const String baseUrl = 'https://dtrssurvey.tgrpdcl.com/api';
   static const String loginEndpoint = '/auth/login';
   static const String logoutEndpoint = '/auth/logout';
   static const String arDetailsEndpoint = '/ae/details/';

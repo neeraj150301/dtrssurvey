@@ -48,11 +48,18 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       if (data['message'] == 'Password updated successfully') {
         emit(state.copyWith(isUpdatingPassword: false, isUpdateSuccess: true));
       } else {
+        String errorMessage = "Failed to update password";
+
+        if (data['detail'] != null) {
+          if (data['detail'] is List && data['detail'].isNotEmpty) {
+            errorMessage = data['detail'][0]['msg'] ?? errorMessage;
+          } else if (data['detail'] is String) {
+            errorMessage = data['detail'];
+          }
+        }
+
         emit(
-          state.copyWith(
-            isUpdatingPassword: false,
-            updateError: data['detail'] ?? "Failed",
-          ),
+          state.copyWith(isUpdatingPassword: false, updateError: errorMessage),
         );
       }
     } catch (e) {
