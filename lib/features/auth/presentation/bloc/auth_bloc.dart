@@ -1,4 +1,5 @@
 import 'package:dtrs_survey/core/storage/secure_storage_helper.dart';
+import 'package:dtrs_survey/core/utils/auth_validators.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'auth_event.dart';
@@ -46,6 +47,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       if (event.phoneNumber.isEmpty) {
         emit(const OtpFailure("Enter mobile number"));
+        return;
+      }
+      if (event.phoneNumber.length != 10) {
+        emit(const OtpFailure("Enter valid 10 digit mobile number"));
         return;
       }
 
@@ -101,23 +106,46 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(ResetPasswordLoading());
 
     try {
-      if (event.resetToken.isEmpty) {
-        emit(const OtpFailure("Retry again. Something went wrong"));
-        return;
-      }
-      if (event.newPassword.isEmpty) {
-        emit(const OtpFailure("Enter new password"));
-        return;
-      }
-      if (event.confirmPassword.isEmpty) {
-        emit(const OtpFailure("Confirm new password"));
+      final phoneError = AuthValidator.validatePhone(event.phoneNumber);
+      if (phoneError != null) {
+        emit(OtpFailure(phoneError));
         return;
       }
 
-      if (event.newPassword != event.confirmPassword) {
-        emit(const OtpFailure("Passwords do not match"));
+      final passwordError = AuthValidator.validatePassword(event.newPassword);
+
+      if (passwordError != null) {
+        emit(OtpFailure(passwordError));
         return;
       }
+
+      final confirmError = AuthValidator.validateConfirmPassword(
+        event.newPassword,
+        event.confirmPassword,
+      );
+
+      if (confirmError != null) {
+        emit(OtpFailure(confirmError));
+        return;
+      }
+
+      // if (event.resetToken.isEmpty) {
+      //   emit(const OtpFailure("Retry again. Something went wrong"));
+      //   return;
+      // }
+      // if (event.newPassword.isEmpty) {
+      //   emit(const OtpFailure("Enter new password"));
+      //   return;
+      // }
+      // if (event.confirmPassword.isEmpty) {
+      //   emit(const OtpFailure("Confirm new password"));
+      //   return;
+      // }
+
+      // if (event.newPassword != event.confirmPassword) {
+      //   emit(const OtpFailure("Passwords do not match"));
+      //   return;
+      // }
 
       final data = await _authRepository.resetPassword(
         event.phoneNumber,

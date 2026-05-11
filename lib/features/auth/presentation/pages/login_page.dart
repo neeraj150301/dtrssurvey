@@ -1,3 +1,4 @@
+import 'package:dtrs_survey/core/utils/auth_validators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dtrs_survey/core/utils/location_service.dart';
 import 'package:dtrs_survey/features/auth/presentation/pages/login_footer.dart';
@@ -64,6 +65,7 @@ class _LoginFormCardState extends State<_LoginFormCard> {
   // Timer? _timer;
   bool _isVerifySent = false;
   String? _resetToken;
+  String? _passwordError;
 
   @override
   void initState() {
@@ -117,6 +119,14 @@ class _LoginFormCardState extends State<_LoginFormCard> {
               SnackBar(
                 content: Text(state.error),
                 backgroundColor: AppColors.errorRed,
+              ),
+            );
+          } else if (state is OtpFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.error),
+                backgroundColor: AppColors.errorRed,
+                behavior: SnackBarBehavior.floating,
               ),
             );
           } else if (state is OtpSent) {
@@ -355,7 +365,14 @@ class _LoginFormCardState extends State<_LoginFormCard> {
             TextField(
               controller: _newPasswordController,
               obscureText: _obscureText,
+              onChanged: (value) {
+                setState(() {
+                  _passwordError = AuthValidator.validatePassword(value);
+                });
+              },
+
               decoration: InputDecoration(
+                errorText: _passwordError,
                 prefixIcon: const Icon(Icons.lock, color: Colors.green),
                 hintText: 'Enter New Password',
                 filled: true,

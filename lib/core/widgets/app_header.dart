@@ -58,20 +58,20 @@ class AppHeader extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'RYTHU POWER',
+                  'TELANGANA RYTHU POWER',
                   style: TextStyle(
                     color: const Color.fromARGB(255, 65, 109, 56),
                     fontWeight: FontWeight.w900,
-                    fontSize: 46,
-                    letterSpacing: 2.2,
+                    fontSize: 27,
+                    // letterSpacing: 2.2,
                   ),
                 ),
                 Text(
-                  'DISTRIBUTION COMPANY OF TELANGANA LIMITED',
+                  'DISTRIBUTION COMPANY LIMITED',
                   style: TextStyle(
                     color: const Color.fromARGB(255, 28, 98, 155),
                     fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontSize: 16,
                   ),
                 ),
                 Text(
@@ -79,7 +79,7 @@ class AppHeader extends StatelessWidget {
                   style: TextStyle(
                     color: const Color.fromARGB(255, 28, 98, 155),
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    fontSize: 14,
                   ),
                 ),
                 const SizedBox(height: 12),

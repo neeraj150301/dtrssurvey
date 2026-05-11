@@ -48,7 +48,12 @@ class AuthRepository {
     if (res.statusCode == 200) {
       return data;
     } else {
-      throw Exception(data['message'] ?? "Failed to send OTP");
+      throw Exception(
+      data['detail'] ??
+      data['message'] ??
+      "Failed to send OTP",
+    );
+    
     }
   }
 
