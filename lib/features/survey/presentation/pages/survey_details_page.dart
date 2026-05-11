@@ -324,16 +324,16 @@ class _SurveyDetailsPageState extends State<SurveyDetailsPage> {
     String fullUrl = _getFullUrl(urlPath);
     return GestureDetector(
       onTap: fullUrl.isNotEmpty
-        ? () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => FullScreenImagePage(imageUrl: fullUrl),
-              ),
-            );
-          }
-        : null,
-        
+          ? () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => FullScreenImagePage(imageUrl: fullUrl),
+                ),
+              );
+            }
+          : null,
+
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Container(
@@ -585,7 +585,11 @@ class _SurveyDetailsPageState extends State<SurveyDetailsPage> {
                   Expanded(
                     flex: 3,
                     child: Text(
-                      e.value.toString(),
+                      e.value.toString().isEmpty ||
+                              e.value.toString() == "null" ||
+                              e.value.toString() == ""
+                          ? "-"
+                          : e.value.toString(),
                       textAlign: TextAlign.right,
                       style: const TextStyle(
                         fontSize: 14,

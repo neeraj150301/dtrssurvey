@@ -1,4 +1,4 @@
-package app.tgspdcl.dtrs_survey
+package com.cdma.dtrs.surveyapp
 
 import io.flutter.embedding.android.FlutterActivity
 
