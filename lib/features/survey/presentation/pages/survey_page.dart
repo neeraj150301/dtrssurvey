@@ -60,6 +60,8 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
   bool isOcrLoading = false;
   bool isOcrSuccess = false;
   OcrData? ocrData;
+  String? ocrErrorMessage;
+
   Future<void> _callOcrApi(File imageFile) async {
     setState(() => isOcrLoading = true);
 
@@ -86,6 +88,7 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
         ocrData = OcrData.fromJson(data['extracted_json']);
         setState(() {
           isOcrSuccess = true;
+          ocrErrorMessage = null;
         });
         if (mounted) {
           scaffoldMessenger
@@ -102,38 +105,42 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
         setState(() {
           namePlatePhoto = null;
           isOcrSuccess = false;
+          ocrErrorMessage =
+              data['error'] ?? "OCR failed. Please capture again.";
         });
-        if (mounted) {
-          scaffoldMessenger
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(data['error'] ?? "OCR failed. Capture again."),
-                backgroundColor: Colors.red,
-                duration: const Duration(days: 1),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-        }
+        // if (mounted) {
+        //   scaffoldMessenger
+        //     ..hideCurrentSnackBar()
+        //     ..showSnackBar(
+        //       SnackBar(
+        //         content: Text(data['error'] ?? "OCR failed. Capture again."),
+        //         backgroundColor: Colors.red,
+        //         duration: const Duration(days: 1),
+        //         behavior: SnackBarBehavior.floating,
+        //       ),
+        //     );
+        // }
       }
     } catch (e) {
       setState(() {
         isOcrLoading = false;
         namePlatePhoto = null;
         isOcrSuccess = false;
+        ocrErrorMessage =
+            "Something went wrong during OCR. Please capture again.";
       });
-      if (mounted) {
-        scaffoldMessenger
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text("Something went wrong. Capture again."),
-              backgroundColor: Colors.red,
-              duration: const Duration(days: 1),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-      }
+      // if (mounted) {
+      //   scaffoldMessenger
+      //     ..hideCurrentSnackBar()
+      //     ..showSnackBar(
+      //       SnackBar(
+      //         content: Text("Something went wrong. Capture again."),
+      //         backgroundColor: Colors.red,
+      //         duration: const Duration(days: 1),
+      //         behavior: SnackBarBehavior.floating,
+      //       ),
+      //     );
+      // }
     }
   }
 
@@ -323,6 +330,7 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
         } else if (type == 3) {
           isOcrSuccess = false;
           ocrData = null;
+          ocrErrorMessage = null;
           namePlatePhoto = file;
         } else if (type == 4) {
           meterPhoto = file;
@@ -509,6 +517,36 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
         ],
 
         const SizedBox(height: 20),
+
+        if (ocrErrorMessage != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.red.shade300),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                const SizedBox(width: 10),
+
+                Expanded(
+                  child: Text(
+                    ocrErrorMessage!,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
 
         SizedBox(
           width: double.infinity,

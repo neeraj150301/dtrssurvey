@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:dtrs_survey/core/storage/secure_storage_helper.dart';
+import 'package:dtrs_survey/features/dashboard/data/repositories/dash_repository.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/pages/widgets/status_stamp.dart';
 import 'package:dtrs_survey/features/survey/presentation/pages/survey_details_page.dart';
 import 'package:dtrs_survey/features/survey/presentation/pages/survey_page.dart';
@@ -10,6 +12,13 @@ import '../../data/models/structure_model.dart';
 import '../bloc/structure_bloc/structures_bloc.dart';
 import '../bloc/structure_bloc/structures_event.dart';
 import '../bloc/structure_bloc/structures_state.dart';
+import 'dart:io';
+import 'package:excel/excel.dart' as excel;
+import 'package:intl/intl.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class StructuresListPage extends StatelessWidget {
   final User user;
@@ -41,6 +50,8 @@ class _StructuresListView extends StatefulWidget {
 class _StructuresListViewState extends State<_StructuresListView> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
+  bool isExporting = false;
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +75,225 @@ class _StructuresListViewState extends State<_StructuresListView> {
     super.dispose();
   }
 
+  Future<List<Structure>> _getExportData() async {
+    final token = await SecureStorageHelper.getToken();
+
+    if (token == null) {
+      throw Exception("Token not found");
+    }
+
+    final state = context.read<StructuresBloc>().state;
+
+    if (state is! StructuresLoaded) {
+      throw Exception("Invalid state");
+    }
+
+    final repo = DashboardRepository();
+
+    final response = await repo.getAllStructuresForExport(
+      state.title,
+      state.username,
+      token,
+      search: _searchController.text,
+    );
+
+    return response.data;
+  }
+
+  Future<void> _exportPdf() async {
+    try {
+      setState(() {
+        isExporting = true;
+      });
+
+      await Permission.manageExternalStorage.request();
+
+      final data = await _getExportData();
+
+      final pdf = PdfDocument();
+
+      final page = pdf.pages.add();
+
+      final grid = PdfGrid();
+
+      grid.columns.add(count: 12);
+
+      grid.headers.add(1);
+
+      final header = grid.headers[0];
+
+      header.cells[0].value = 'S.No';
+      header.cells[1].value = 'Structure Code';
+      header.cells[2].value = 'Structure Name';
+      header.cells[3].value = 'Equipment Id';
+      header.cells[4].value = 'Serial No';
+      header.cells[5].value = 'Agency';
+      header.cells[6].value = 'Circle';
+      header.cells[7].value = 'Division';
+      header.cells[8].value = 'Subdivision';
+      header.cells[9].value = 'Section';
+      header.cells[10].value = 'Feeder';
+      header.cells[11].value = 'Status';
+
+      for (int i = 0; i < data.length; i++) {
+        final row = grid.rows.add();
+
+        final item = data[i];
+
+        row.cells[0].value = '${i + 1}';
+        row.cells[1].value = item.structurecode;
+        row.cells[2].value = item.structname;
+        row.cells[3].value = item.equipment ?? '';
+        row.cells[4].value = item.serialnumber ?? '';
+        row.cells[5].value = item.agency ?? '';
+        row.cells[6].value = item.cirname;
+        row.cells[7].value = item.divname;
+        row.cells[8].value = item.subdivname;
+        row.cells[9].value = item.secname;
+        row.cells[10].value = item.feedername;
+        row.cells[11].value = item.surveyStatus.toUpperCase();
+      }
+
+      grid.draw(page: page, bounds: const Rect.fromLTWH(0, 50, 0, 0));
+
+      page.graphics.drawString(
+        'Total DTRs Report',
+        PdfStandardFont(PdfFontFamily.helvetica, 18),
+        bounds: const Rect.fromLTWH(0, 0, 500, 30),
+      );
+
+      page.graphics.drawString(
+        'Generated on: ${DateFormat('dd/MM/yyyy, hh:mm:ss a').format(DateTime.now())}',
+        PdfStandardFont(PdfFontFamily.helvetica, 10),
+        bounds: const Rect.fromLTWH(0, 25, 500, 20),
+      );
+
+      final bytes = await pdf.save();
+
+      pdf.dispose();
+
+      Directory? dir;
+
+      if (Platform.isAndroid) {
+        dir = Directory('/storage/emulated/0/Download');
+      } else {
+        dir = await getApplicationDocumentsDirectory();
+      }
+
+      final file = File(
+        '${dir.path}/dtrs_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+
+      await file.writeAsBytes(bytes);
+
+      OpenFilex.open(file.path);
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('PDF saved in Download folder')));
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => isExporting = false);
+      }
+    }
+  }
+
+  Future<void> _exportExcel() async {
+    try {
+      await Permission.manageExternalStorage.request();
+
+      setState(() => isExporting = true);
+
+      final data = await _getExportData();
+
+      final excell = excel.Excel.createExcel();
+      excell.delete('Sheet1');
+      final sheet = excell['DTR Report'];
+
+      sheet.appendRow([excel.TextCellValue('Total DTRs Report')]);
+
+      sheet.appendRow([
+        excel.TextCellValue(
+          'Generated on: ${DateFormat('dd/MM/yyyy hh:mm:ss a').format(DateTime.now())}',
+        ),
+      ]);
+
+      sheet.appendRow([]);
+
+      sheet.appendRow([
+        excel.TextCellValue('S.No'),
+        excel.TextCellValue('Structure Code'),
+        excel.TextCellValue('Structure Name'),
+        excel.TextCellValue('Equipment Id'),
+        excel.TextCellValue('Serial No'),
+        excel.TextCellValue('Agency'),
+        excel.TextCellValue('Circle'),
+        excel.TextCellValue('Division'),
+        excel.TextCellValue('Subdivision'),
+        excel.TextCellValue('Section'),
+        excel.TextCellValue('Feeder'),
+        excel.TextCellValue('Status'),
+      ]);
+
+      for (int i = 0; i < data.length; i++) {
+        final item = data[i];
+
+        sheet.appendRow([
+          excel.IntCellValue(i + 1),
+          excel.TextCellValue(item.structurecode),
+          excel.TextCellValue(item.structname),
+          excel.TextCellValue(item.equipment ?? ''),
+          excel.TextCellValue(item.serialnumber ?? ''),
+          excel.TextCellValue(item.agency ?? ''),
+          excel.TextCellValue(item.cirname),
+          excel.TextCellValue(item.divname),
+          excel.TextCellValue(item.subdivname),
+          excel.TextCellValue(item.secname),
+          excel.TextCellValue(item.feedername),
+          excel.TextCellValue(item.surveyStatus.toUpperCase()),
+        ]);
+      }
+
+      Directory? dir;
+
+      if (Platform.isAndroid) {
+        dir = Directory('/storage/emulated/0/Download');
+      } else {
+        dir = await getApplicationDocumentsDirectory();
+      }
+
+      final file = File(
+        '${dir.path}/dtrs_report_${DateTime.now().millisecondsSinceEpoch}.xlsx',
+      );
+
+      final bytes = excell.encode();
+
+      if (bytes == null) {
+        throw Exception("Failed to generate Excel file");
+      }
+
+      await file.writeAsBytes(bytes, flush: true);
+
+      OpenFilex.open(file.path);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Excel saved in Download folder')),
+        );
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => isExporting = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,6 +305,55 @@ class _StructuresListViewState extends State<_StructuresListView> {
         ),
         backgroundColor: AppColors.backgroundGreen,
         elevation: 0,
+        actions: [
+          if (isExporting)
+            const Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                ),
+              ),
+            )
+          else
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.download),
+              onSelected: (value) async {
+                if (value == "pdf") {
+                  await _exportPdf();
+                } else {
+                  await _exportExcel();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: "pdf",
+                  child: Row(
+                    children: [
+                      Icon(Icons.picture_as_pdf, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text("Export PDF"),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: "excel",
+                  child: Row(
+                    children: [
+                      Icon(Icons.table_chart, color: Colors.green),
+                      SizedBox(width: 8),
+                      Text("Export Excel"),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
       body: Column(
         children: [
