@@ -5,13 +5,19 @@ class AppHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final titleFont = width * 0.052;
+    final subTitleFont = width * 0.068;
+    final smallFont = width * 0.040;
+    final tinyFont = width * 0.034;
+
     return Stack(
       children: [
         Positioned.fill(
           child: Image.asset(
             'assets/login_images/bg_grey.png',
             fit: BoxFit.cover,
-            cacheWidth: MediaQuery.of(context).size.width.toInt(),
+            cacheWidth: width.toInt(),
           ),
         ),
         SizedBox(
@@ -33,7 +39,7 @@ class AppHeader extends StatelessWidget {
                     ),
                     Image.asset(
                       'assets/login_images/TS_RS-LOGO.png',
-                      height: 50,
+                      height: width * 0.12,
                       fit: BoxFit.contain,
                     ),
 
@@ -50,36 +56,53 @@ class AppHeader extends StatelessWidget {
 
                 Text(
                   'తెలంగాణ రైతు విద్యుత్ పంపిణీ సంస్థ',
+                  maxLines: 1,
                   style: TextStyle(
                     color: const Color.fromARGB(255, 65, 109, 56),
                     fontWeight: FontWeight.w900,
-                    fontSize: 20,
-                    letterSpacing: 2,
+                    fontSize: titleFont,
+                    letterSpacing: 1.5,
                   ),
                 ),
-                Text(
-                  'TELANGANA RYTHU POWER',
-                  style: TextStyle(
-                    color: const Color.fromARGB(255, 65, 109, 56),
-                    fontWeight: FontWeight.w900,
-                    fontSize: 27,
-                    // letterSpacing: 2.2,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+
+                  child: Text(
+                    'TELANGANA RYTHU POWER',
+                    maxLines: 1,
+
+                    style: TextStyle(
+                      color: const Color.fromARGB(255, 65, 109, 56),
+                      fontWeight: FontWeight.w900,
+                      fontSize: subTitleFont,
+                      // letterSpacing: 2.2,
+                    ),
                   ),
                 ),
-                Text(
-                  'DISTRIBUTION COMPANY LIMITED',
-                  style: TextStyle(
-                    color: const Color.fromARGB(255, 28, 98, 155),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+
+                  child: Text(
+                    'DISTRIBUTION COMPANY LIMITED',
+                    maxLines: 1,
+
+                    style: TextStyle(
+                      color: const Color.fromARGB(255, 28, 98, 155),
+                      fontWeight: FontWeight.bold,
+                      fontSize: smallFont,
+                    ),
                   ),
                 ),
-                Text(
-                  'A Government of Telangana Undertaking',
-                  style: TextStyle(
-                    color: const Color.fromARGB(255, 28, 98, 155),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'A Government of Telangana Undertaking',
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: const Color.fromARGB(255, 28, 98, 155),
+                      fontWeight: FontWeight.bold,
+                      fontSize: tinyFont,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),

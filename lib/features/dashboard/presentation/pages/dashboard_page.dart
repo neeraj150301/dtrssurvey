@@ -115,11 +115,11 @@ class _DashboardPageState extends State<DashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Agricultural Structures Survey',
+                  'Survey of DTR\'s to be transfered to TGRPDCL',
                   style: TextStyle(
                     color: const Color.fromARGB(255, 65, 109, 56),
                     fontWeight: FontWeight.w900,
-                    fontSize: 18,
+                    fontSize: 16,
                   ),
                 ),
                 SizedBox(height: 16),

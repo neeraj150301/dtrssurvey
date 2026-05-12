@@ -55,10 +55,11 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
   File? namePlatePhoto;
   bool isMeterAvailable = false;
   File? meterPhoto;
+  late ScaffoldMessengerState scaffoldMessenger;
   final ImagePicker _picker = ImagePicker();
   bool isOcrLoading = false;
+  bool isOcrSuccess = false;
   OcrData? ocrData;
-
   Future<void> _callOcrApi(File imageFile) async {
     setState(() => isOcrLoading = true);
 
@@ -83,47 +84,56 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
       if (data['success'] == true) {
         //  SUCCESS
         ocrData = OcrData.fromJson(data['extracted_json']);
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(
-              content: Text("OCR Successful ✔"),
-              backgroundColor: Colors.green,
-            ),
-          );
+        setState(() {
+          isOcrSuccess = true;
+        });
+        if (mounted) {
+          scaffoldMessenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(
+                content: Text("OCR Successful ✔"),
+                backgroundColor: Colors.green,
+              ),
+            );
+        }
       } else {
         //  FAIL -> FORCE RETAKE
         setState(() {
           namePlatePhoto = null;
+          isOcrSuccess = false;
         });
-
-        ScaffoldMessenger.of(context)
+        if (mounted) {
+          scaffoldMessenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(data['error'] ?? "OCR failed. Capture again."),
+                backgroundColor: Colors.red,
+                duration: const Duration(days: 1),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+        }
+      }
+    } catch (e) {
+      setState(() {
+        isOcrLoading = false;
+        namePlatePhoto = null;
+        isOcrSuccess = false;
+      });
+      if (mounted) {
+        scaffoldMessenger
           ..hideCurrentSnackBar()
           ..showSnackBar(
             SnackBar(
-              content: Text(data['error'] ?? "OCR failed. Capture again."),
+              content: Text("Something went wrong. Capture again."),
               backgroundColor: Colors.red,
               duration: const Duration(days: 1),
               behavior: SnackBarBehavior.floating,
             ),
           );
       }
-    } catch (e) {
-      setState(() {
-        isOcrLoading = false;
-        namePlatePhoto = null;
-      });
-
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text("Something went wrong. Capture again."),
-            backgroundColor: Colors.red,
-            duration: const Duration(days: 1),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
     }
   }
 
@@ -135,8 +145,16 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
 
   @override
   void dispose() {
+    scaffoldMessenger.hideCurrentSnackBar();
+
     LocationService.stopGlobalCapture();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    scaffoldMessenger = ScaffoldMessenger.of(context);
   }
 
   @override
@@ -150,7 +168,7 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
       body: BlocConsumer<SurveyBloc, SurveyState>(
         listener: (context, state) {
           if (state.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            scaffoldMessenger.showSnackBar(
               SnackBar(
                 content: Text(state.error!),
                 backgroundColor: Colors.red,
@@ -303,6 +321,8 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
         } else if (type == 2) {
           embossPhoto = file;
         } else if (type == 3) {
+          isOcrSuccess = false;
+          ocrData = null;
           namePlatePhoto = file;
         } else if (type == 4) {
           meterPhoto = file;
@@ -315,7 +335,28 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
   }
 
   Widget _buildCameraButton(String title, int type) {
+    bool isEnabled = false;
     File? image;
+
+    if (type == 1) {
+      isEnabled = true;
+    }
+
+    if (type == 2) {
+      isEnabled = structurePhoto != null;
+    }
+
+    if (type == 3) {
+      isEnabled = embossPhoto != null;
+    }
+
+    if (type == 4) {
+      isEnabled =
+          structurePhoto != null &&
+          embossPhoto != null &&
+          namePlatePhoto != null &&
+          isOcrSuccess;
+    }
 
     if (type == 1) image = structurePhoto;
     if (type == 2) image = embossPhoto;
@@ -333,12 +374,14 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
         ),
         const SizedBox(height: 8),
         GestureDetector(
-          onTap: isOcrLoading && type == 3 ? null : () => _pickImage(type),
+          onTap: (!isEnabled || (isOcrLoading && type == 3))
+              ? null
+              : () => _pickImage(type),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: isEnabled ? Colors.grey[200] : Colors.grey[350],
               borderRadius: BorderRadius.circular(8),
             ),
             child: isOcrLoading && type == 3
@@ -349,12 +392,18 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
                     ),
                   )
                 : image == null
-                ? const Column(
+                ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.camera_alt, size: 24),
+                      Icon(
+                        Icons.camera_alt,
+                        size: 24,
+                        color: isEnabled ? Colors.black : Colors.grey,
+                      ),
                       // SizedBox(height: 6),
-                      Text("Tap to capture"),
+                      Text(
+                        isEnabled ? "Tap to capture" : "Complete previous step",
+                      ),
                     ],
                   )
                 : SizedBox(
@@ -367,11 +416,32 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
           ),
         ),
         if (image != null)
-          const Padding(
-            padding: EdgeInsets.only(top: 6),
-            child: Text(
-              "Image captured ✔",
-              style: TextStyle(color: Colors.green),
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Image captured ✔",
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+
+                // OCR SUCCESS MESSAGE
+                if (type == 3 && isOcrSuccess)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Text(
+                      "OCR captured successfully ✔",
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
       ],
@@ -434,7 +504,9 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
         const SizedBox(height: 16),
 
         // SHOW ONLY IF YES
-        if (isMeterAvailable) ...[_buildCameraButton('METER DEVICE PHOTO ', 4)],
+        if (isMeterAvailable && isOcrSuccess) ...[
+          _buildCameraButton('METER DEVICE PHOTO ', 4),
+        ],
 
         const SizedBox(height: 20),
 
@@ -494,15 +566,17 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
     final isSelected = isMeterAvailable == value;
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          isMeterAvailable = value;
+      onTap: isOcrSuccess
+          ? () {
+              setState(() {
+                isMeterAvailable = value;
 
-          if (!value) {
-            meterPhoto = null; // reset photo if NO
-          }
-        });
-      },
+                if (!value) {
+                  meterPhoto = null;
+                }
+              });
+            }
+          : null,
       child: Row(
         children: [
           Container(
@@ -516,10 +590,12 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
                 RadioGroup<bool>(
                   groupValue: isMeterAvailable,
                   onChanged: (v) {
-                    setState(() {
-                      isMeterAvailable = v!;
-                      if (!v) meterPhoto = null;
-                    });
+                    isOcrSuccess
+                        ? setState(() {
+                            isMeterAvailable = v!;
+                            if (!v) meterPhoto = null;
+                          })
+                        : null;
                   },
                   // activeColor: Colors.green,
                   child: Text(
@@ -543,6 +619,8 @@ class _SurveyPageViewState extends State<_SurveyPageView> {
     if (structurePhoto == null) return false;
     if (embossPhoto == null) return false;
     if (namePlatePhoto == null) return false;
+    if (isOcrLoading) return false;
+    if (!isOcrSuccess) return false;
     if (isMeterAvailable && meterPhoto == null) return false;
     return true;
   }

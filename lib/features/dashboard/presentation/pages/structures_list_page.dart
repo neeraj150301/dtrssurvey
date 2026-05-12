@@ -78,7 +78,9 @@ class _StructuresListViewState extends State<_StructuresListView> {
       ),
       body: Column(
         children: [
-          SizedBox(height: 16),
+          SizedBox(height: 8),
+          _buildSearchText(),
+          SizedBox(height: 4),
           _buildSearchBar(),
           Expanded(child: _buildBody()),
         ],
@@ -93,8 +95,7 @@ class _StructuresListViewState extends State<_StructuresListView> {
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: 'Search by Structure Code, Equipment Id, Serial...',
-          hintStyle: TextStyle(fontSize: 12),
+          hintText: 'Search Structure / Equip ID / Serial No',
           fillColor: Colors.white,
           filled: true,
           // CLEAR BUTTON
@@ -137,6 +138,17 @@ class _StructuresListViewState extends State<_StructuresListView> {
             borderSide: const BorderSide(color: Colors.green, width: 1),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSearchText() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: Text(
+        'Search by Structure Name, Structure Code, Equipment Id, Serial No',
+        maxLines: 1,
+        style: TextStyle(fontSize: 12),
       ),
     );
   }
@@ -409,7 +421,7 @@ class _StructuresListViewState extends State<_StructuresListView> {
                 Expanded(
                   child: _buildInfoRow(
                     Icons.numbers,
-                    'Serial',
+                    'Serial Number',
                     structure.serialnumber ?? 'N/A',
                   ),
                 ),
