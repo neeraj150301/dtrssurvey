@@ -54,14 +54,17 @@ class AppHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
 
-                Text(
-                  'తెలంగాణ రైతు విద్యుత్ పంపిణీ సంస్థ',
-                  maxLines: 1,
-                  style: TextStyle(
-                    color: const Color.fromARGB(255, 65, 109, 56),
-                    fontWeight: FontWeight.w900,
-                    fontSize: titleFont,
-                    letterSpacing: 1.5,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'తెలంగాణ రైతు విద్యుత్ పంపిణీ సంస్థ',
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: const Color.fromARGB(255, 65, 109, 56),
+                      fontWeight: FontWeight.w900,
+                      fontSize: titleFont,
+                      // letterSpacing: 1.5,
+                    ),
                   ),
                 ),
                 FittedBox(
