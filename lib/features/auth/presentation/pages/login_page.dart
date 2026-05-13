@@ -514,7 +514,7 @@ class _LoginFormCardState extends State<_LoginFormCard> {
           ),
           const SizedBox(height: 6),
           const Text(
-            "Agricultural Structures Survey",
+            'Survey of DTR\'s to be transfered to TGRPDCL',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey),
           ),
