@@ -95,13 +95,21 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
     // _transformerTypeController = TextEditingController(
     //   text: widget.ocrData?.transformeryType ?? '',
     // );
-    _selectedTransformerType =
-        widget.ocrData?.transformeryType.toLowerCase() == "copper"
-        ? "COPPER"
-        : "ALUMINIUM";
+    // _selectedTransformerType =
+    //     widget.ocrData?.transformeryType.toLowerCase() == "copper"
+    //     ? "COPPER"
+    //     : "ALUMINIUM";
+    final extractedType = widget.ocrData?.transformeryType.trim().toLowerCase();
 
+    if (extractedType == "copper") {
+      _selectedTransformerType = "COPPER";
+    } else if (extractedType == "aluminium") {
+      _selectedTransformerType = "ALUMINIUM";
+    } else {
+      _selectedTransformerType = null;
+    }
     _transformerTypeController = TextEditingController(
-      text: _selectedTransformerType,
+      text: _selectedTransformerType ?? '',
     );
     _manufacturerController = TextEditingController(
       text: widget.ocrData?.manufacturer ?? '',
@@ -152,7 +160,7 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
         _amperesHvController.text.isNotEmpty &&
         _amperesLvController.text.isNotEmpty &&
         _capacityController.text.isNotEmpty &&
-        _transformerTypeController.text.isNotEmpty &&
+        _selectedTransformerType != null &&
         _manufacturerController.text.isNotEmpty &&
         _manufactureDateController.text.isNotEmpty &&
         _orderNoController.text.isNotEmpty &&
@@ -504,13 +512,28 @@ class _ReviewSurveyScreenState extends State<ReviewSurveyScreen> {
 
   Widget _buildTransformerDropdown() {
     return DropdownButtonFormField<String>(
+      isExpanded: true,
       initialValue: _selectedTransformerType,
+      hint: const Text(
+        "Select Transformer Type",
+        style: TextStyle(fontSize: 13),
+        overflow: TextOverflow.ellipsis,
+      ),
       decoration: InputDecoration(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(4),
+          borderSide: BorderSide(
+            color: _selectedTransformerType == null
+                ? Colors.red
+                : Colors.grey.shade400,
+          ),
+        ),
+        // hint: const Text("Select Transformer Type"),
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         isDense: true,
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
       ),
       items: const [
         DropdownMenuItem(value: "ALUMINIUM", child: Text("Aluminium")),

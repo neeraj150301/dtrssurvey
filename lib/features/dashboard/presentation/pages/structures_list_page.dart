@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:dtrs_survey/core/storage/secure_storage_helper.dart';
 import 'package:dtrs_survey/features/dashboard/data/repositories/dash_repository.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/pages/widgets/status_stamp.dart';
@@ -6,18 +7,16 @@ import 'package:dtrs_survey/features/survey/presentation/pages/survey_details_pa
 import 'package:dtrs_survey/features/survey/presentation/pages/survey_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../auth/data/models/auth_models.dart';
 import '../../data/models/structure_model.dart';
 import '../bloc/structure_bloc/structures_bloc.dart';
 import '../bloc/structure_bloc/structures_event.dart';
 import '../bloc/structure_bloc/structures_state.dart';
-import 'dart:io';
 import 'package:excel/excel.dart' as excel;
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 class StructuresListPage extends StatelessWidget {
@@ -106,7 +105,7 @@ class _StructuresListViewState extends State<_StructuresListView> {
         isExporting = true;
       });
 
-      await Permission.manageExternalStorage.request();
+      // await Permission.manageExternalStorage.request();
 
       final data = await _getExportData();
 
@@ -172,21 +171,31 @@ class _StructuresListViewState extends State<_StructuresListView> {
 
       pdf.dispose();
 
-      Directory? dir;
+      // Directory? dir;
 
-      if (Platform.isAndroid) {
-        dir = Directory('/storage/emulated/0/Download');
-      } else {
-        dir = await getApplicationDocumentsDirectory();
-      }
+      // if (Platform.isAndroid) {
+      //   dir = Directory('/storage/emulated/0/Download');
+      // } else {
+      //   dir = await getApplicationDocumentsDirectory();
+      // }
 
-      final file = File(
-        '${dir.path}/dtrs_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      // final file = File(
+      //   '${dir.path}/dtrs_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      // );
+
+      // await file.writeAsBytes(bytes);
+
+      // OpenFilex.open(file.path);
+      final filePath = await FlutterFileDialog.saveFile(
+        params: SaveFileDialogParams(
+          data: Uint8List.fromList(bytes),
+          fileName: 'dtrs_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+        ),
       );
 
-      await file.writeAsBytes(bytes);
-
-      OpenFilex.open(file.path);
+      if (filePath != null) {
+        OpenFilex.open(filePath);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -204,7 +213,7 @@ class _StructuresListViewState extends State<_StructuresListView> {
 
   Future<void> _exportExcel() async {
     try {
-      await Permission.manageExternalStorage.request();
+      // await Permission.manageExternalStorage.request();
 
       setState(() => isExporting = true);
 
@@ -258,17 +267,18 @@ class _StructuresListViewState extends State<_StructuresListView> {
         ]);
       }
 
-      Directory? dir;
+      // Directory? dir;
 
-      if (Platform.isAndroid) {
-        dir = Directory('/storage/emulated/0/Download');
-      } else {
-        dir = await getApplicationDocumentsDirectory();
-      }
+      // if (Platform.isAndroid) {
+      //   dir = Directory('/storage/emulated/0/Download');
+      // } else {
+      //   dir = await getApplicationDocumentsDirectory();
+      // }
 
-      final file = File(
-        '${dir.path}/dtrs_report_${DateTime.now().millisecondsSinceEpoch}.xlsx',
-      );
+      // final file = File(
+      //   '${dir.path}/dtrs_report_${DateTime.now().millisecondsSinceEpoch}.xlsx',
+      // );
+
 
       final bytes = excell.encode();
 
@@ -276,9 +286,21 @@ class _StructuresListViewState extends State<_StructuresListView> {
         throw Exception("Failed to generate Excel file");
       }
 
-      await file.writeAsBytes(bytes, flush: true);
+final filePath = await FlutterFileDialog.saveFile(
+  params: SaveFileDialogParams(
+    data: Uint8List.fromList(bytes),
+    fileName:
+        'dtrs_report_${DateTime.now().millisecondsSinceEpoch}.xlsx',
+  ),
+);
 
-      OpenFilex.open(file.path);
+if (filePath != null) {
+  OpenFilex.open(filePath);
+}
+
+      // await file.writeAsBytes(bytes, flush: true);
+
+      // OpenFilex.open(file.path);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
