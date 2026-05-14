@@ -4,6 +4,7 @@ import 'package:dtrs_survey/features/dashboard/presentation/bloc/dashboard_bloc/
 import 'package:dtrs_survey/features/dashboard/presentation/bloc/dashboard_bloc/dash_state.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/bloc/profile_bloc/profile_bloc.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/bloc/profile_bloc/profile_event.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/bloc/profile_bloc/profile_state.dart';
 import 'package:dtrs_survey/features/dashboard/presentation/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -87,13 +88,18 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               Icon(Icons.person, color: AppColors.primaryGreen),
               SizedBox(width: 20),
-              Text(
-                'Welcome ${widget.user.username}',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
+              BlocBuilder<ProfileBloc, ProfileState>(
+                builder: (context, state) {
+                  final name = state.profile?.name ?? widget.user.username;
+                  return Text(
+                    'Welcome $name',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textDark,
+                    ),
+                  );
+                },
               ),
             ],
           ),

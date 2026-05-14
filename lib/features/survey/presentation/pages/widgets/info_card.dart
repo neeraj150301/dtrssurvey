@@ -1,5 +1,8 @@
 import 'package:dtrs_survey/features/dashboard/data/models/structure_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/bloc/profile_bloc/profile_bloc.dart';
+import 'package:dtrs_survey/features/dashboard/presentation/bloc/profile_bloc/profile_state.dart';
 
 Widget buildInfoCard(
   Structure structure, {
@@ -7,10 +10,13 @@ Widget buildInfoCard(
   String? selectedFeeder,
   int? agriculturalConnection,
 }) {
-  return Wrap(
-    spacing: 6,
-    children: [
-      _rowPair(
+  return BlocBuilder<ProfileBloc, ProfileState>(
+    builder: (context, state) {
+      final p = state.profile;
+      return Wrap(
+        spacing: 6,
+        children: [
+          _rowPair(
         _infoBox("Agency", '${structure.agency}'),
         _infoBox("Circle", '${structure.circode} - ${structure.cirname}'),
       ),
@@ -28,7 +34,7 @@ Widget buildInfoCard(
       ),
       _rowPair(
         _infoBox("Section", '${structure.uksec} - ${structure.secname}'),
-        _infoBox("AE Employee Code", structure.aePhno.substring(6, 10)),
+        _infoBox("Employee Code", p?.employeeCode ?? "N/A"),
       ),
 
       _rowPair(
@@ -41,16 +47,18 @@ Widget buildInfoCard(
       ),
 
       _rowPair(
-        _infoBox("AE Name", 'AE ${structure.aePhno}'),
-        _infoBox("AE Mobile No", structure.aePhno),
+        _infoBox("Name", p?.name ?? "N/A"),
+        _infoBox("Mobile No", p?.mobile ?? structure.aePhno),
       ),
       _rowPair(
         agriculturalConnection != null
             ? _infoBox("Agricultural Connection", '$agriculturalConnection')
             : SizedBox.shrink(),
-        SizedBox.shrink(),
-      ),
-    ],
+          SizedBox.shrink(),
+        ),
+      ],
+    );
+    },
   );
 }
 
